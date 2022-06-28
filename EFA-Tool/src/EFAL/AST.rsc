@@ -4,7 +4,7 @@ module EFAL::AST
 
 
 // Automation type: 1: DFA, 2: NFA, 3: NFA-epsilon
-data Automaton = Automaton(int automationType, list[str] alphabet, list[DefinedTransition] definedTransitions, 
+data Automaton = Automaton(int automationType, list[str] alphabet, 
 list[Integer] integers, list[Boolean] booleans, list[State] states);
 
 data Integer = Integer(str label, int val);
@@ -12,8 +12,6 @@ data Integer = Integer(str label, int val);
 data Boolean = Boolean(str label, bool val);
 
 data State = State(str label, list[Statement] statements, bool isBeginState, bool isEndingState);
-
-data DefinedTransition = DefinedTransition(str label, Statement statement);
 
 data Statement = 
 	  Transition(list[str] chars, State state)
