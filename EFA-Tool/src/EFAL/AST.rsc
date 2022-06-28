@@ -4,18 +4,21 @@ module EFAL::AST
 
 
 // Automation type: 1: DFA, 2: NFA, 3: NFA-epsilon
-data Automaton = Automaton(int automationType, list[str] alphabet, 
-list[Statement] statements, list[Integer] integers, list[Boolean] booleans, list[State] states);
+data Automaton = Automaton(int automationType, list[str] alphabet, list[Statement] statements, 
+list[Integer] integers, list[Boolean] booleans, list[State] states);
 
 data Integer = Integer(str label, int val);
 
 data Boolean = Boolean(str label, bool val);
 
-data State = State(str label, list[Statement] statements);
+data State = State(str label, list[Statement] statements, bool isBeginState, bool isEndingState);
+
+data DefinedTransition = DefinedTransition(str label, Statement statement);
 
 data Statement = 
-	  Transition(str label, list[str] chars, State state)
+	  Transition(list[str] chars, State state)
 	| Conditional(Expression expr, list[Statement] statements) // Else can be a conditional with as the condition: "NOT IF_CONDITION"
+	| ConditionalWithElse(Expression expr, list[Statement] statementsIfTrue, list[Statement] statementsIfFalse)
 	| IntegerAssignment(Integer integer, IntegerExpression intExpr)
 	| BooleanAssignment(Boolean boolean, BooleanExpression boolExpr);
 
