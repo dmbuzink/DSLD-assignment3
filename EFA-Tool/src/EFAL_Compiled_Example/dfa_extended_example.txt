@@ -1,0 +1,32 @@
+DFA
+
+ALPHABET = a, b, c
+
+TRANS back_to_initial_state_for_c = TAKES C TO Z 
+INT amount_of_c = 0
+BOOL only_once = FALSE
+
+INITAL STATE X:
+    TAKES a, b TO Y
+    if PROCESSING_CHAR IS c AND amount_of_c <= 2:
+        amount_of_c = amount_of_c + 1
+        TAKES c TO Y
+    else:
+        TAKES c TO X
+
+STATE Y:
+    TAKES a, b TO Z
+    if amount_of_c > 2:
+        TAKES c to Y
+    else:
+        amount_of_c = amount_of_c + 1
+        TAKES c TO Z
+    
+FINAL STATE Z:
+    TAKES a, b TO Z
+    if only_once:
+        TAKES c TO Z
+    else:
+        only_once = TRUE
+        back_to_initial_state_for_c
+        
