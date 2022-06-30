@@ -9,9 +9,8 @@ public class Automaton
 	public int amount_of_c = 0;
 	public boolean only_once = false;
 	
-	public Automaton(int automatonType)
+	public Automaton()
 	{
-		this.AutomatonType = automatonType;
 	}
 	
 	public void run(String input)

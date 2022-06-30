@@ -2,7 +2,7 @@ package EFAL_Compiled_Example;
 
 public class Fail_State implements State {
 
-	
+	@Override
 	public State processChar(Automaton automaton, String character) {
 		return this;
 	}
