@@ -25,16 +25,16 @@ data BooleanExpression =
 	| ProcessingCharComparison(str char)
 	| AndCondition(BooleanExpression cond1, BooleanExpression cond2)
 	| OrCondition(BooleanExpression cond1, BooleanExpression cond2)
-	| IntegerComparison(int int1, int int2, int integerComparer) // Integer comparer: 1: <, 2: <=, 3: =, 4: >=, 5: >
-	| BooleanComparison(bool bool1, bool bool2); 
+	| IntegerComparison(IntegerExpression int1, IntegerExpression int2, int integerComparer) // Integer comparer: 1: <, 2: <=, 3: =, 4: >=, 5: >
+	| BooleanComparison(BooleanExpression bool1, BooleanExpression bool2); 
 	// note: In the original syntax you may have: 
 	// "if X" this can become a BooleanComparison with X and true. Likewise If not X with false
 
 data IntegerExpression = 
 	  IntegerValue(int val)
-	| Addition(int val1, int val2)
-	| Subtraction(int val1, int val2)
-	| Multiplication(int val1, int val2)
-	| Division(int val1, int val2);
+	| Addition(IntegerExpression val1, IntegerExpression val2)
+	| Subtraction(IntegerExpression val1, IntegerExpression val2)
+	| Multiplication(IntegerExpression val1, IntegerExpression val2)
+	| Division(IntegerExpression val1, IntegerExpression val2);
 	
 
