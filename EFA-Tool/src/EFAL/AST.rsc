@@ -4,7 +4,7 @@ module EFAL::AST
 
 
 // Automation type: 1: DFA, 2: NFA, 3: NFA-epsilon
-data Automaton = Automaton(int automationType, list[str] alphabet, 
+data Automaton = Automaton(int automatonType, list[str] alphabet, 
 list[Integer] integers, list[Boolean] booleans, list[State] states);
 
 data Integer = Integer(str label, int val);
@@ -15,8 +15,8 @@ data State = State(str label, list[Statement] statements, bool isBeginState, boo
 
 data Statement = 
 	  Transition(list[str] chars, State state)
-	| Conditional(Expression expr, list[Statement] statements) // Else can be a conditional with as the condition: "NOT IF_CONDITION"
-	| ConditionalWithElse(Expression expr, list[Statement] statementsIfTrue, list[Statement] statementsIfFalse)
+	| Conditional(BooleanExpression expr, list[Statement] statements) // Else can be a conditional with as the condition: "NOT IF_CONDITION"
+	| ConditionalWithElse(BooleanExpression expr, list[Statement] statementsIfTrue, list[Statement] statementsIfFalse)
 	| IntegerAssignment(Integer integer, IntegerExpression intExpr)
 	| BooleanAssignment(Boolean boolean, BooleanExpression boolExpr);
 
@@ -25,8 +25,8 @@ data BooleanExpression =
 	| ProcessingCharComparison(str char)
 	| AndCondition(BooleanExpression cond1, BooleanExpression cond2)
 	| OrCondition(BooleanExpression cond1, BooleanExpression cond2)
-	| IntegerComparison(int val1, int val2, int integerComparer) // Integer comparer: 1: <, 2: <=, 3: =, 4: >=, 5: >
-	| BooleanComparison(bool val1, bool val2); 
+	| IntegerComparison(int int1, int int2, int integerComparer) // Integer comparer: 1: <, 2: <=, 3: =, 4: >=, 5: >
+	| BooleanComparison(bool bool1, bool bool2); 
 	// note: In the original syntax you may have: 
 	// "if X" this can become a BooleanComparison with X and true. Likewise If not X with false
 
