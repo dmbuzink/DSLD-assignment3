@@ -89,10 +89,10 @@ syntax BoolExpr
 	| BoolExpr "OR" BoolExpr
 	| IntExpr "=" IntExpr
 	//For some reason > etc. are not accepted by rascal
-	| IntExpr "GT" IntExpr
-	| IntExpr "LT" IntExpr
-	| IntExpr "LEQ" IntExpr
-	| IntExpr "GEQ" IntExpr
+	| IntExpr "\>" IntExpr
+	| IntExpr "\<" IntExpr
+	| IntExpr "\<=" IntExpr
+	| IntExpr "\>=" IntExpr
 	;
 	
 syntax Transition
