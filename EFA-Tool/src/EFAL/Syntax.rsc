@@ -34,20 +34,22 @@ syntax StateList
 	;
 
 syntax State
-	= "INITIAL" "STATE" Label ":" StateContent
-	| "FINAL" "STATE" Label ":" StateContent
-	| "INITIAL" "FINAL" "STATE" Label ":" StateContent
-	| "FINAL" "INITIAL" "STATE" Label ":" StateContent
-	| "STATE" Label ":" StateContent
+	= "INITIAL" "STATE" Label ":" StateContentList
+	| "FINAL" "STATE" Label ":" StateContentList
+	| "INITIAL" "FINAL" "STATE" Label ":" StateContentList
+	| "FINAL" "INITIAL" "STATE" Label ":" StateContentList
+	| "STATE" Label ":" StateContentList
 	;	
 	
 syntax StateContent
-	= TransitionLabel
-	| TransitionLabel StateContent
+	= Transition
 	| VariableAssignment
-	| VariableAssignment StateContent
 	| IFELSE
-	| IFELSE StateContent
+	;
+	
+syntax StateContentList
+	= StateContent StateContentList
+	| StateContent
 	;
 
 syntax DeclarationList
@@ -62,8 +64,8 @@ syntax Declaration
 	;
 
 syntax IFELSE
-	= "IF" BoolExpr ":" StateContent "ELSE" ":" StateContent
-	| "IF" BoolExpr ":" StateContent
+	= "IF" BoolExpr ":" StateContentList "ELSE" ":" StateContentList
+	| "IF" BoolExpr ":" StateContentList
 	;
 
 syntax VariableAssignment
@@ -75,23 +77,24 @@ syntax VariableAssignment
 syntax IntExpr
 	= IntegerLiteral
 	| Label
-	| IntExpr "+" IntExpr
-	| IntExpr "-" IntExpr
 	| IntExpr "*" IntExpr
-	| IntExpr "/" IntExpr
+	> IntExpr "/" IntExpr
+	> IntExpr "+" IntExpr
+	> IntExpr "-" IntExpr
 	;
 	
 syntax BoolExpr
 	= Boolean
 	| Label
 	| "NOT" BoolExpr
-	| BoolExpr "AND" BoolExpr
-	| BoolExpr "OR" BoolExpr
-	| IntExpr "=" IntExpr
+	> BoolExpr "AND" BoolExpr
+	> BoolExpr "OR" BoolExpr
+	> BoolExpr "=" BoolExpr
+	> IntExpr "=" IntExpr
 	//For some reason > etc. are not accepted by rascal
-	| IntExpr '\>' IntExpr
-	| IntExpr '\<' IntExpr
-	| IntExpr '\<'"=" IntExpr
+	> IntExpr '\>' IntExpr
+	> IntExpr '\<' IntExpr
+	> IntExpr '\<'"=" IntExpr
 	| IntExpr '\>'"=" IntExpr
 	;
 	
