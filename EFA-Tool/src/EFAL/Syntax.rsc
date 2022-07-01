@@ -10,7 +10,6 @@ lexical Boolean = "TRUE" | "FALSE";
 lexical Label = [a-z]+ \Keywords;
 
 start syntax Automata
-//	= StateList
 	= AutomataType Alphabet DeclarationList StateList
 	| AutomataType Alphabet StateList
 	;
