@@ -3,13 +3,14 @@ module EFAL::Syntax
 layout Whitespace = [\t-\n\r\ ]*; 
 
 //To be filled in
-keyword Keywords = "TRANS";
+keyword Keywords = "TRANS" | "TRUE" | "FALSE" | "TAKES" | "TO" | "IF" | "ELSE";
 	 
 lexical IntegerLiteral = [0-9]+;
 lexical Boolean = "TRUE" | "FALSE";
-lexical Label = ([a-zA-Z][a-zA-Z_0-9]*) \Keywords;
+lexical Label = [a-z]+ \Keywords;
 
-start syntax Automemta
+start syntax Automata
+//	= StateList
 	= AutomataType Alphabet DeclarationList StateList
 	| AutomataType Alphabet StateList
 	;
@@ -17,11 +18,11 @@ start syntax Automemta
 syntax AutomataType
 	= "DFA"
 	| "NFA"
-	| "eNFA"
+	| "ENFA"
 	;
 
 syntax Alphabet
-	= "ALPHABET" "=" LabelList;
+	= "ALPHABET" ":=" LabelList;
 	
 syntax LabelList
 	= Label
@@ -42,8 +43,8 @@ syntax State
 	;	
 	
 syntax StateContent
-	= Transition
-	| Transition StateContent
+	= TransitionLabel
+	| TransitionLabel StateContent
 	| VariableAssignment
 	| VariableAssignment StateContent
 	| IFELSE
@@ -56,9 +57,9 @@ syntax DeclarationList
 	;
 
 syntax Declaration
-	= "TRANS" Label "=" "TAKES" LabelList "TO" Label
-	| "INT" Label "=" IntegerLiteral
-	| "BOOL" Label "=" Boolean
+	= "TRANS" Label ":=" Transition
+	| "INT" Label ":=" IntegerLiteral
+	| "BOOL" Label ":=" Boolean
 	;
 
 syntax IFELSE
@@ -67,8 +68,8 @@ syntax IFELSE
 	;
 
 syntax VariableAssignment
-	= Label "=" BoolExpr
-	| Label "=" IntExpr
+	= Label ":=" BoolExpr
+	| Label ":=" IntExpr
 	;
 	
 //Does not properly support calculation rules
@@ -89,12 +90,16 @@ syntax BoolExpr
 	| BoolExpr "OR" BoolExpr
 	| IntExpr "=" IntExpr
 	//For some reason > etc. are not accepted by rascal
-	| IntExpr "\>" IntExpr
-	| IntExpr "\<" IntExpr
-	| IntExpr "\<=" IntExpr
-	| IntExpr "\>=" IntExpr
+	| IntExpr '\>' IntExpr
+	| IntExpr '\<' IntExpr
+	| IntExpr '\<'"=" IntExpr
+	| IntExpr '\>'"=" IntExpr
+	;
+	
+syntax TransitionLabel
+	= "TRANS" Label
+	| Transition
 	;
 	
 syntax Transition
-	= "TAKES" LabelList "TO" Label
-	| Label;
+	= "TAKES" LabelList "TO" Label;
