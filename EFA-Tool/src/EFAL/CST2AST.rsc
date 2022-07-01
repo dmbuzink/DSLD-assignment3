@@ -12,8 +12,16 @@ public Automaton cst2ast(Tree tree){
 public Automaton load((Automata) `<AutomataType t> <Alphabet a> <DeclarationList d> <StateList s>`)
 	= {
 		//type, alphabet, integer, booleans, states
-		return Automaton(loadAutomataType(t), loadAlphabet(a), loadIntDeclarations(d), loadBoolDeclarations(d), []);
+		return Automaton(loadAutomataType(t), loadAlphabet(a), loadIntDeclarations(d), loadBoolDeclarations(d), loadStates(s));
 	};
+	
+public list[State] loadStates((StateList) `<State s> <StateList sl>`) = [loadState(s)] + loadStates(sl);
+public list[State] loadStates((StateList) `<State s>`) = [loadState(s)];
+public State loadState((State) `INITIAL STATE <Label l> : <StateContent sc>`) = State("<l>", [], true, false);
+public State loadState((State) `INITIAL FINAL STATE <Label l> : <StateContent sc>`) = State("<l>", [], true, true);
+public State loadState((State) `FINAL INITIAL STATE <Label l> : <StateContent sc>`) = State("<l>", [], true, true);
+public State loadState((State) `FINAL STATE <Label l> : <StateContent sc>`) = State("<l>", [], false, true);
+public State loadState((State) `STATE <Label l> : <StateContent sc>`) = State("<l>", [], false, false);
 	
 public int loadAutomataType((AutomataType) `DFA`) = 0;
 public int loadAutomataType((AutomataType) `NFA`) = 1;
