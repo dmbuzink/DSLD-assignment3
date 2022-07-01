@@ -5,7 +5,7 @@ module EFAL::AST
 
 // Automation type: 1: DFA, 2: NFA, 3: NFA-epsilon
 data Automaton = Automaton(int automatonType, list[str] alphabet, 
-list[Integer] integers, list[Boolean] booleans, list[State] states);
+	list[Integer] integers, list[Boolean] booleans, list[State] states);
 
 data Integer = Integer(str label, int val);
 
