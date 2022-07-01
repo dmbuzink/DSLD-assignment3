@@ -31,13 +31,15 @@ str compile(Automaton a){
 			'	{
 			'	}
 			'	
-			'	public void run(String input)
+			'	public boolean isAccepted(String input)
 			'   {
 			'		for(int i = 0; i \< input.length(); i++)
 			'		{
 			'			String character = Character.toString(input.charAt(i));
 			'			this._currentState = this._currentState.processChar(this, character);
 			'		}
+			'	
+			'	return this.currentState.isEndState();
 			'	}
   			'}
   			'
