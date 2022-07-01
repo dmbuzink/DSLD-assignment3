@@ -5,11 +5,11 @@ module EFAL::AST
 
 // Automation type: 1: DFA, 2: NFA, 3: NFA-epsilon
 data Automaton = Automaton(int automatonType, list[str] alphabet, 
-	list[Integer] integers, list[Boolean] booleans, list[State] states);
+	list[IntegerExpression] integers, list[BooleanExpression] booleans, list[State] states);
 
-data Integer = Integer(str label, int val);
+//data Integer = Integer(str label, int val);
 
-data Boolean = Boolean(str label, bool val);
+//data Boolean = Boolean(str label, bool val);
 
 data State = State(str label, list[Statement] statements, bool isBeginState, bool isEndingState);
 
@@ -17,11 +17,12 @@ data Statement =
 	  Transition(list[str] chars, State state)
 	| Conditional(BooleanExpression expr, list[Statement] statements) // Else can be a conditional with as the condition: "NOT IF_CONDITION"
 	| ConditionalWithElse(BooleanExpression expr, list[Statement] statementsIfTrue, list[Statement] statementsIfFalse)
-	| IntegerAssignment(Integer integer, IntegerExpression intExpr)
-	| BooleanAssignment(Boolean boolean, BooleanExpression boolExpr);
+	| IntegerAssignment(IntegerExpression integer, IntegerExpression intExpr)
+	| BooleanAssignment(BooleanExpression boolean, BooleanExpression boolExpr);
 
 data BooleanExpression = 
 	  BooleanValue(bool val)
+	| Boolean(str label, bool intialValue)
 	| ProcessingCharComparison(str char)
 	| AndCondition(BooleanExpression cond1, BooleanExpression cond2)
 	| OrCondition(BooleanExpression cond1, BooleanExpression cond2)
@@ -32,6 +33,7 @@ data BooleanExpression =
 
 data IntegerExpression = 
 	  IntegerValue(int val)
+	| Integer(str label, int initialValue)
 	| Addition(IntegerExpression val1, IntegerExpression val2)
 	| Subtraction(IntegerExpression val1, IntegerExpression val2)
 	| Multiplication(IntegerExpression val1, IntegerExpression val2)

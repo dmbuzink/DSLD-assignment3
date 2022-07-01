@@ -14,17 +14,17 @@ import Boolean;
   
 // Maybe return a list of strs? One for each file.
 str compile(Automaton a){
-	if(Automaton(int automatonType, list[str] alphabet, list[Integer] integers, list[Boolean] booleans, list[State] states) := a)
+	if(Automaton(int automatonType, list[str] alphabet, list[IntegerExpression] integers, list[BooleanExpression] booleans, list[State] states) := a)
 	{
 		return "public class Automaton {
   			'	public int AutomatonType = <automatonType>;
   			'	private State currentState = new State_<getBeginStateLabel(states)>();
   			'
   			'	<for (integer <- integers) {>
-  			'		<compile(integer)>
+  			'		<compileIntegerVariable(integer)>
   			'	<}>
   			'	<for (boolean <- booleans) {>
-  			'	<compile(boolean)>
+  			'	<compileBooleanVariable(boolean)>
   			'	<}>
   			'
   			'	public Automaton()
@@ -79,20 +79,20 @@ str getFailState() =
 	'}
 	";
   
-str compile(Integer integer)
+str compileIntegerVariable(IntegerExpression integer)
 {
-	if(Integer(str label, int val) := integer)
+	if(Integer(str label, int initialValue) := integer)
 	{
-		return "public int <label> = <val>;";
+		return "public int <label> = <initialValue>;";
 	}
 	else return "";
 }
 
-str compile(Boolean boolean)
+str compileBooleanVariable(BooleanExpression boolean)
 {
-	if(Boolean(str label, bool val) := boolean)
+	if(Boolean(str label, bool initialValue) := boolean)
 	{
-		return "public boolean <label> = <toString(val)>;";
+		return "public boolean <label> = <toString(initialValue)>;";
 	}
 	else return "";
 }
@@ -151,10 +151,10 @@ str compile(Statement statement)
 		case ConditionalWithElse(BooleanExpression expr, list[Statement] statementsIfTrue, list[Statement] statementsIfFalse): 
 			return compileConditionalWithElse(expr, statementsIfTrue, statementsIfFalse);
 		
-		case IntegerAssignment(Integer integer, IntegerExpression intExpr): 
+		case IntegerAssignment(IntegerExpression integer, IntegerExpression intExpr): 
 			return compileIntegerAssignment(integer, intExpr);
 		
-		case BooleanAssignment(Boolean boolean, BooleanExpression boolExpr): 
+		case BooleanAssignment(BooleanExpression boolean, BooleanExpression boolExpr): 
 			return compileBooleanAssignment(boolean, boolExpr);
 	}
 	
@@ -173,7 +173,7 @@ str compileTransition(list[str] chars, State state)
 	return 
 	"if(Arrays.asList(<charList>).contains(character))
 	'{	
-	'	return new State_<getLabelFromState(state)>;
+	'	return new State_<getLabelFromState(state)>();
 	'}";
 }
 
@@ -205,13 +205,9 @@ str compileConditionalWithElse(BooleanExpression expr, list[Statement] statement
 	'}";
 }
 
-str compileIntegerAssignment(Integer integer, IntegerExpression intExpr)
+str compileIntegerAssignment(IntegerExpression integer, IntegerExpression intExpr)
 {
-	if(Integer(str label, int val) := integer)
-	{
-		return "automaton.<label> = <compileIntegerExpression(intExpr)>;";
-	}
-	return "";
+	return "automaton.<getLabelFromInteger(integer)> = <compileIntegerExpression(intExpr)>;";
 }
 
 str compileIntegerExpression(IntegerExpression intExpr)
@@ -220,6 +216,9 @@ str compileIntegerExpression(IntegerExpression intExpr)
 	{
 		case IntegerValue(int val): 
 			return "<val>";
+			
+		case Integer(str label, int initialValue):
+			return "automaton.<label>";
 		
 		case Addition(IntegerExpression val1, IntegerExpression val2): 
 			return "(<compileIntegerExpression(val1)> + <compileIntegerExpression(val2)>);";
@@ -237,11 +236,11 @@ str compileIntegerExpression(IntegerExpression intExpr)
 	}
 }
 
-str compileBooleanAssignment(Boolean boolean, BooleanExpression boolExpr)
+str compileBooleanAssignment(BooleanExpression boolean, BooleanExpression boolExpr)
 {
 	if(Boolean(str label, bool val) := boolean)
 	{
-		return "automaton.<label> = <compileBooleanExpression(boolExpr)>;";
+		return "automaton.<getLabelFromBoolean(boolean)> = <compileBooleanExpression(boolExpr)>;";
 	}
 	return "";
 	
@@ -253,6 +252,9 @@ str compileBooleanExpression(BooleanExpression boolExpr)
 	{
 		case BooleanValue(bool val): 
 			return "<toString(val)>";
+			
+		case BooleanValue(str label, bool initialValue):
+			return "automaton.<label>";
 		
 		case ProcessingCharComparison(str char): 
 			return "character.equals(\"<char>\")";
@@ -293,4 +295,24 @@ str getLabelFromState(State state)
 	}
 	else return "";
 }
+
+str getLabelFromBoolean(BooleanExpression boolExpr)
+{
+	if(Boolean(str label, bool initialValue) := boolExpr)
+	{
+		return label;
+	}
+	return "";
+}
+
+str getLabelFromInteger(IntegerExpression intExpr)
+{
+	if(Integer(str label, int initialValue) := intExpr)
+	{
+		return label;
+	}
+	return "";
+}
+
+
 
