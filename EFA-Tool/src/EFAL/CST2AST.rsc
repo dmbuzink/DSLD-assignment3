@@ -14,6 +14,12 @@ public Automaton load((Automata) `<AutomataType t> <Alphabet a> <DeclarationList
 		//type, alphabet, integer, booleans, states
 		return Automaton(loadAutomataType(t), loadAlphabet(a), loadIntDeclarations(d), loadBoolDeclarations(d), loadStates(s));
 	};
+
+map[str label, IntegerExpression integer] declaredIntegers = ();
+map[str label, BooleanExpression boolean] declaredBooleans = ();
+	
+public IntegerExpression loadInteger(Label l) = declaredIntegers["<l>"];
+public BooleanExpression loadBoolean(Label l) = declaredBooleans["<l>"];
 	
 public list[State] loadStates((StateList) `<State s> <StateList sl>`) = [loadState(s)] + loadStates(sl);
 public list[State] loadStates((StateList) `<State s>`) = [loadState(s)];
@@ -34,13 +40,11 @@ public Statement loadIFELSE((IFELSE) `IF <BoolExpr b> : <StateContentList sc1>`)
 
 public Statement loadTransition((Transition) `TAKES <LabelList ll> TO <Label l>`) = Transition(loadLabellist(ll), "<l>");
 
-//TODO Reuse the declared variables instead of creating new ones
-public Statement loadVariableAss((VariableAssignment) `<Label l> := <BoolExpr e>`) = BooleanAssignment(Boolean("<l>", false), loadBoolExpr(e));
-public Statement loadVariableAss((VariableAssignment) `<Label l> := <IntExpr i>`) = IntegerAssignment(Integer("<l>", 0), loadIntExpr(i));
+public Statement loadVariableAss((VariableAssignment) `<Label l> := <BoolExpr e>`) = BooleanAssignment(loadBoolean(l), loadBoolExpr(e));
+public Statement loadVariableAss((VariableAssignment) `<Label l> := <IntExpr i>`) = IntegerAssignment(loadInteger(l), loadIntExpr(i));
 
 public BooleanExpression loadBoolExpr((BoolExpr) `<Boolean b>`) = BooleanValue(loadBool(b));
-//TODO use actual declared value
-public BooleanExpression loadBoolExpr((BoolExpr) `<Label l>`) = Boolean("<l>", false);
+public BooleanExpression loadBoolExpr((BoolExpr) `<Label l>`) = loadBoolean(l);
 public BooleanExpression loadBoolExpr((BoolExpr) `NOT <BoolExpr b>`) = BooleanComparison(loadBoolExpr(b) ,BooleanValue(false));
 public BooleanExpression loadBoolExpr((BoolExpr) `<BoolExpr b1> AND <BoolExpr b2>`) = AndCondition(loadBoolExpr(b1), loadBoolExpr(b2));
 public BooleanExpression loadBoolExpr((BoolExpr) `<BoolExpr b1> OR <BoolExpr b2>`) = OrCondition(loadBoolExpr(b1), loadBoolExpr(b2));
@@ -52,8 +56,7 @@ public BooleanExpression loadBoolExpr((BoolExpr) `<IntExpr i1> \>= <IntExpr i2>`
 public BooleanExpression loadBoolExpr((BoolExpr) `<IntExpr i1> \> <IntExpr i2>`) = IntegerComparison(loadIntExpr(i1), loadIntExpr(i2), 5);
 
 public IntegerExpression loadIntExpr((IntExpr) `<IntegerLiteral i>`) = IntegerValue(toInt("<i>"));
-//TODO also use the actual declared variable
-public IntegerExpression loadIntExpr((IntExpr) `<Label l>`) = Integer("<l>", 0);
+public IntegerExpression loadIntExpr((IntExpr) `<Label l>`) = loadInteger(l);
 public IntegerExpression loadIntExpr((IntExpr) `<IntExpr i1> + <IntExpr i2>`) = Addition(loadIntExpr(i1), loadIntExpr(i2));
 public IntegerExpression loadIntExpr((IntExpr) `<IntExpr i1> - <IntExpr i2>`) = Subtraction(loadIntExpr(i1), loadIntExpr(i2));
 public IntegerExpression loadIntExpr((IntExpr) `<IntExpr i1> * <IntExpr i2>`) = Multiplication(loadIntExpr(i1), loadIntExpr(i2));
@@ -69,7 +72,11 @@ public list[str] loadLabellist((LabelList) `<Label l>`) = ["<l>"];
 
 public list[IntegerExpression] loadIntDeclarations((DeclarationList) `<Declaration d> <DeclarationList dl>`) = loadIntDeclaration(d) + loadIntDeclarations(dl);
 public list[IntegerExpression] loadIntDeclarations((DeclarationList) `<Declaration d>`) = loadIntDeclaration(d);
-public list[IntegerExpression] loadIntDeclaration((Declaration) `INT <Label l> := <IntegerLiteral i>`) = [Integer("<l>", toInt("<i>"))];
+public list[IntegerExpression] loadIntDeclaration((Declaration) `INT <Label l> := <IntegerLiteral i>`) = {
+	//Declare variable
+	declaredIntegers["<l>"] = Integer("<l>", toInt("<i>"));
+	return [loadInteger(l)];
+};
 public list[IntegerExpression] loadIntDeclaration((Declaration) `TRANS <Label l> := <Transition t>`) = [];
 public list[IntegerExpression] loadIntDeclaration((Declaration) `BOOL <Label l> := <Boolean b>`) = [];
 
@@ -77,6 +84,10 @@ public list[BooleanExpression] loadBoolDeclarations((DeclarationList) `<Declarat
 public list[BooleanExpression] loadBoolDeclarations((DeclarationList) `<Declaration d>`) = loadBoolDeclaration(d);
 public list[BooleanExpression] loadBoolDeclaration((Declaration) `INT <Label l> := <IntegerLiteral i>`) = [];
 public list[BooleanExpression] loadBoolDeclaration((Declaration) `TRANS <Label l> := <Transition t>`) = [];
-public list[BooleanExpression] loadBoolDeclaration((Declaration) `BOOL <Label l> := <Boolean b>`) = [Boolean("<l>", loadBool(b))];
+public list[BooleanExpression] loadBoolDeclaration((Declaration) `BOOL <Label l> := <Boolean b>`) = {
+	//Declare variable
+	declaredBooleans["<l>"] = Boolean("<l>", loadBool(b));
+	return [loadBoolean(l)];
+};
 public bool loadBool ((Boolean) `TRUE`) = true;
 public bool loadBool ((Boolean) `FALSE`) = false;
