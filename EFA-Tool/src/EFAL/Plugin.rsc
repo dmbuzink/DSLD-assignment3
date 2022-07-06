@@ -7,10 +7,16 @@ import EFAL::CST2AST;
 import EFAL::Syntax;
 import EFAL::Compile;
 import IO;
+import String;
+
+str trimEnd(str text)
+{
+	return text[0..findFirst(text, "A")] + trim(text[findFirst(text, "A")..]);
+}
 
 &T parseEFAL(loc file)
 {
-	return parse(#Automata, file);
+	return parse(#Automata, trimEnd(readFile(file)));
 }
 
 &T getAutomaton(loc file)
