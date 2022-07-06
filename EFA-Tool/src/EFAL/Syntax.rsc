@@ -42,7 +42,7 @@ syntax State
 	;	
 	
 syntax StateContent
-	= Transition
+	= TransitionLabel
 	| VariableAssignment
 	| IFELSE
 	;

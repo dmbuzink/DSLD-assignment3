@@ -1,0 +1,28 @@
+DFA
+
+ALPHABET := a,b,c
+
+TRANS backtoinitialstateforc := TAKES c TO z 
+INT amountofc := 0
+BOOL onlyonce := FALSE
+
+INITIAL STATE x:
+    TAKES a, b TO y
+    TAKES c TO x
+
+STATE y:
+    TAKES a, b TO z
+    IF amountofc > 2:
+        TAKES c TO y
+    ELSE:
+        amountofc := amountofc + 1
+        TAKES c TO z
+    
+FINAL STATE z:
+    TAKES a, b TO z
+    IF onlyonce:
+        TAKES c TO z
+    ELSE:
+        onlyonce := TRUE
+        TRANS backtoinitialstateforc
+        

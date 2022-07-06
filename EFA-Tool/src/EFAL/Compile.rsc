@@ -2,6 +2,9 @@ module EFAL::Compile
 
 import EFAL::AST;
 import Boolean;
+import ListRelation;
+
+
 
 // Multiple approaches?
 // Compiler for SMT: https://github.com/usethesource/rascal/blob/main/src/org/rascalmpl/library/lang/smtlib2/Compiler.rsc
@@ -13,12 +16,28 @@ import Boolean;
 // https://tutor.rascal-mpl.org/Rascal/Expressions/Values/String/String.html
   
 // Maybe return a list of strs? One for each file.
-str compile(Automaton a){
+list[tuple[str fileName, str content]] compileAutomaton(Automaton a)
+{
+	list[tuple[str fileName, str content]] javaFiles = [];
 	if(Automaton(int automatonType, list[str] alphabet, list[IntegerExpression] integers, list[BooleanExpression] booleans, list[State] states) := a)
 	{
-		return "public class Automaton {
+  			javaFiles = javaFiles + compileAutomatonSelf(a) + getStateInterface() + getFailState();
+  			for(State state <- states)
+  			{
+  				javaFiles = javaFiles + <"State_<getLabelFromState(state)>", compile(state)>;
+  			}
+	}
+	
+	return javaFiles;
+}
+
+tuple[str, str] compileAutomatonSelf(Automaton a)
+{ 
+	if(Automaton(int automatonType, list[str] alphabet, list[IntegerExpression] integers, list[BooleanExpression] booleans, list[State] states) := a)
+	{
+		str automatonFileContent = "public class Automaton {
   			'	public int AutomatonType = <automatonType>;
-  			'	private State currentState = new State_<getBeginStateLabel(states)>();
+  			'	private IState currentState = new State_<getBeginStateLabel(states)>();
   			'
   			'	<for (integer <- integers) {>
   			'		<compileIntegerVariable(integer)>
@@ -42,29 +61,24 @@ str compile(Automaton a){
 			'	return this.currentState.isEndState();
 			'	}
   			'}
-  			'
-  			'<getStateInterface()>
-  			'
-  			'<getFailState()>
-  			'
-  			'<for (state <- states) {>
-  			'	<compile(state)>
-  			'<}>";
+  			'";
+  			return <"Automaton", automatonFileContent>;
 	}
-	else return "";
+	else return <"", "">;
+}
   
-  }
-  
-str getStateInterface() = 
-	"public interface State 
+tuple[str,str] getStateInterface() = 
+	<"IState",
+	"public interface IState 
 	'{
 	'	public State processChar(Automaton automaton, String character);
 	'
 	'	public boolean isEndState();
-	'}";
+	'}">;
 
-str getFailState() = 
-	"public class Fail_State implements State
+tuple[str,str] getFailState() = 
+	<"Fail_State",
+	"public class Fail_State implements IState
 	'{
 	'	@Override
 	'	public State processChar(Automaton automaton, String character) {
@@ -77,7 +91,7 @@ str getFailState() =
 	'		return false;
 	'	}
 	'}
-	";
+	'">;
   
 str compileIntegerVariable(IntegerExpression integer)
 {
@@ -117,7 +131,7 @@ str compile(State state)
 		return 
 		"import java.util.Arrays;
 		'
-		'public class State_<label> implements State
+		'public class State_<label> implements IState
 		'{
 		'	@Override
 		'	public State processChar(Automaton automaton, String character) 
