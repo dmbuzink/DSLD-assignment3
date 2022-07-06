@@ -142,8 +142,8 @@ str compile(Statement statement)
 {
 	switch(statement)
 	{
-		case Transition(list[str] chars, State state): 
-			return compileTransition(chars, state);
+		case Transition(list[str] chars, str stateName): 
+			return compileTransition(chars, stateName);
 		
 		case Conditional(BooleanExpression expr, list[Statement] statements): 
 			return compileConditional(expr, statements);
@@ -161,7 +161,7 @@ str compile(Statement statement)
 	return "";
 }
 
-str compileTransition(list[str] chars, State state)
+str compileTransition(list[str] chars, str stateName)
 {
 	str charList = "";
 	for(str char <- chars)
@@ -173,7 +173,7 @@ str compileTransition(list[str] chars, State state)
 	return 
 	"if(Arrays.asList(<charList>).contains(character))
 	'{	
-	'	return new State_<getLabelFromState(state)>();
+	'	return new State_<stateName>();
 	'}";
 }
 
