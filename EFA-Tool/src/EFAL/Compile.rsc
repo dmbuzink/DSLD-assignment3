@@ -253,7 +253,7 @@ str compileBooleanExpression(BooleanExpression boolExpr)
 		case BooleanValue(bool val): 
 			return "<toString(val)>";
 			
-		case BooleanValue(str label, bool initialValue):
+		case Boolean(str label, bool initialValue):
 			return "automaton.<label>";
 		
 		case ProcessingCharComparison(str char): 
