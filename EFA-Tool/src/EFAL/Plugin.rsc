@@ -24,9 +24,9 @@ str trimEnd(str text)
 	return cst2ast(parseEFAL(file));
 }
 
-bool checkWellformedness(loc file)
+bool automatonIsValid(&T automaton)
 {
-	return checkAutomaton(getAutomaton(file));
+	return isValidAutomaton(automaton);
 }
 
 void registerEFAL() {
@@ -39,11 +39,30 @@ void registerEFAL() {
 // run to test different string on the given automaton
 void compile(loc file, loc dir)
 {
-	list[tuple[str fileName, str content]] javaFiles = compileAutomaton(getAutomaton(file));
+	// Argument checks
+	if(!exists(file))
+	{
+		println("No file was found at the given location");
+		return;
+	}
+	if(!isDirectory(dir))
+	{
+		println("Given directory does not exist");
+		return;
+	}
+
+	&T automaton = getAutomaton(file);
+	if(!automatonIsValid(automaton))
+	{
+		println("Not a valid file");
+		return;
+	}
+	list[tuple[str fileName, str content]] javaFiles = compileAutomaton(automaton);
 	for(tuple[str fileName, str content] generatedFile <- javaFiles)
 	{
 		createFileWithContent(dir + "/<generatedFile.fileName>.java", generatedFile.content);
 	}
+	println("Successfully compiled");
 }
 
 void createFileWithContent(loc file, str content)

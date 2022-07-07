@@ -68,9 +68,9 @@ public IntegerExpression loadIntExpr((IntExpr) `<IntExpr i1> - <IntExpr i2>`) = 
 public IntegerExpression loadIntExpr((IntExpr) `<IntExpr i1> * <IntExpr i2>`) = Multiplication(loadIntExpr(i1), loadIntExpr(i2));
 public IntegerExpression loadIntExpr((IntExpr) `<IntExpr i1> / <IntExpr i2>`) = Division(loadIntExpr(i1), loadIntExpr(i2));
 
-public int loadAutomataType((AutomataType) `DFA`) = 0;
-public int loadAutomataType((AutomataType) `NFA`) = 1;
-public int loadAutomataType((AutomataType) `ENFA`) = 2;
+public int loadAutomataType((AutomataType) `DFA`) = 1;
+public int loadAutomataType((AutomataType) `NFA`) = 2;
+public int loadAutomataType((AutomataType) `ENFA`) = 3;
 
 public list[str] loadAlphabet((Alphabet) `ALPHABET := <LabelList l>`) = loadLabellist(l);
 public list[str] loadLabellist((LabelList) `<Label l> , <LabelList ls>`) = ["<l>"] + loadLabellist(ls);
