@@ -3,6 +3,7 @@ module EFAL::Compile
 import EFAL::AST;
 import Boolean;
 import ListRelation;
+import List;
 
 
 
@@ -35,8 +36,10 @@ tuple[str, str] compileAutomatonSelf(Automaton a)
 { 
 	if(Automaton(int automatonType, list[str] alphabet, list[IntegerExpression] integers, list[BooleanExpression] booleans, list[State] states) := a)
 	{
-		str automatonFileContent = "public class Automaton {
-  			'	public int AutomatonType = <automatonType>;
+		str automatonFileContent = "import java.util.ArrayList;
+			'
+			'public class Automaton {
+  			'	private int automatonType = <automatonType>;
   			'	private IState currentState = new State_<getBeginStateLabel(states)>();
   			'	<for (integer <- integers) {>
   			'	<compileIntegerVariable(integer)>
@@ -47,22 +50,117 @@ tuple[str, str] compileAutomatonSelf(Automaton a)
   			'	public Automaton()
 			'	{
 			'	}
-			'	
+			'
+			'	public Automaton(<getAutomatonConstructorParameters(integers, booleans)>)
+			'	{
+			'		this.currentState = state;
+			'		<for (integer <- integers) {>
+  			'		<compileCopyInteger(integer)>
+  			'		<}>
+  			'		<for (boolean <- booleans) {>
+  			'		<compileCopyBoolean(boolean)>
+  			'		<}>
+			'	}
+			'
 			'	public boolean isAccepted(String input)
 			'   {
 			'		for(int i = 0; i \< input.length(); i++)
 			'		{
 			'			String character = Character.toString(input.charAt(i));
-			'			this.currentState = this.currentState.processChar(this, character);
+			'			ArrayList\<IState\> newStates = this.currentState.processChar(this, character);
+			'			if(this.automatonType == 1 || newStates.size() == 1)
+			'			{
+			'				this.currentState = newStates.get(0);
+			'			}
+			'			else
+			'			{
+			'				for(IState state : newStates)
+			'				{
+			'					if(copyWithNewState(<getAutomatonConstructorArguments(integers, booleans)>).isAccepted(input.substring(i + 1)))
+			'					{
+			'						return true;
+			'					}
+			'				}
+			'				return false;
+			'			}
 			'		}
 			'	
-			'	return this.currentState.isEndState();
+			'		return this.currentState.isEndState();
+			'	}
+			'	
+			'	private Automaton copyWithNewState(IState state)
+			'	{
+			'		return new Automaton(<getAutomatonConstructorArguments(integers, booleans)>);
 			'	}
   			'}
   			'";
   			return <"Automaton", automatonFileContent>;
 	}
 	else return <"", "">;
+}
+
+str getAutomatonConstructorParameters(list[IntegerExpression] integers, list[BooleanExpression] booleans)
+{
+	str result = "IState state, ";
+	for(IntegerExpression integerExpr <- integers)
+	{
+		if(Integer(str label, int initialValue) := integerExpr)
+		{
+			result += "int <label>, ";
+		}
+	}
+	for(BooleanExpression boolExpr <- booleans)
+	{
+		if(Boolean(str label, bool initialValue) := boolExpr )
+		{
+			result += "boolean <label>, ";
+		}
+	}
+	return result[..-2];
+}
+
+str getAutomatonConstructorArguments(list[IntegerExpression] integers, list[BooleanExpression] booleans)
+{
+	str result = "state, ";
+	for(IntegerExpression integerExpr <- integers)
+	{
+		if(Integer(str label, int initialValue) := integerExpr)
+		{
+			result += "automaton.<label>, ";
+		}
+	}
+	for(BooleanExpression boolExpr <- booleans)
+	{
+		if(Boolean(str label, bool initialValue) := boolExpr )
+		{
+			result += "automaton.<label>, ";
+		}
+	}
+	return result[..-2];
+}
+
+str compileCopyInteger(IntegerExpression integerExpr)
+{
+	if(Integer(str label, int initialValue) := integerExpr)
+	{
+		return "this.<label> = <label>;";
+	}
+	else
+	{
+		return "";
+	}
+}
+
+str compileCopyBoolean(BooleanExpression boolExpression)
+{
+	if(Boolean(str label, bool initialValue) := boolExpression)
+	{
+		return "this.<label> = <label>;";
+	}
+	else
+	{
+		return "";
+	}
 }
 
 tuple[str, str] getMainClass() = 
@@ -95,20 +193,26 @@ tuple[str, str] getMainClass() =
   
 tuple[str,str] getStateInterface() = 
 	<"IState",
-	"public interface IState 
+	"import java.util.ArrayList;
+	'
+	'public interface IState 
 	'{
-	'	public IState processChar(Automaton automaton, String character);
+	'	public ArrayList\<IState\> processChar(Automaton automaton, String character);
 	'
 	'	public boolean isEndState();
 	'}">;
 
 tuple[str,str] getFailState() = 
 	<"Fail_State",
-	"public class Fail_State implements IState
+	"import java.util.ArrayList;
+	'
+	'public class Fail_State implements IState
 	'{
 	'	@Override
-	'	public IState processChar(Automaton automaton, String character) {
-	'		return this;
+	'	public ArrayList\<IState\> processChar(Automaton automaton, String character) {
+	'		ArrayList\<IState\> states = new ArrayList\<IState\>();
+	'		states.add(this);
+			return states;
 	'	}
 	'
 	'	@Override
@@ -156,16 +260,22 @@ str compile(State state)
 	{
 		return 
 		"import java.util.Arrays;
+		'import java.util.ArrayList;
 		'
 		'public class State_<label> implements IState
 		'{
 		'	@Override
-		'	public IState processChar(Automaton automaton, String character) 
+		'	public ArrayList\<IState\> processChar(Automaton automaton, String character) 
 		'	{
+		'		ArrayList\<IState\> newStates = new ArrayList\<IState\>();
 		'		<for (statement <- statements) {>
 		'			<compile(statement)>
 		'		<}>
-		'		return new Fail_State();		
+		'		if(newStates.size() == 0)
+		'		{
+		'			newStates.add(new Fail_State());
+		'		}	
+		'		return newStates;
 		'	}
 		'
 		'	@Override
@@ -213,7 +323,7 @@ str compileTransition(list[str] chars, str stateName)
 	return 
 	"if(Arrays.asList(<charList>).contains(character))
 	'{	
-	'	return new State_<stateName>();
+	'	newStates.add(new State_<stateName>());
 	'}";
 }
 
