@@ -14,4 +14,4 @@ STATE y:
 		TAKES a,b TO z
 
 FINAL STATE z:
-	TAKES a TO z
+	TAKES x TO z
