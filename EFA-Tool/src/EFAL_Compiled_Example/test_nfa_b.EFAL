@@ -1,0 +1,17 @@
+NFA
+
+ALPHABET := a,b
+
+INT amountofab := 0
+
+INITIAL STATE x:
+	TAKES a,b TO x
+	amountofab := amountofab + 1
+	IF amountofab < 4:
+		TAKES b TO y
+
+STATE y:
+		TAKES a,b TO z
+
+FINAL STATE z:
+	TAKES a TO z

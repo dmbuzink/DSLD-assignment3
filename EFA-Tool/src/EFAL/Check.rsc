@@ -3,6 +3,7 @@ module EFAL::Check
 import EFAL::AST;
 import List;
 import Boolean;
+import IO;
 
 list[int] validAutomationTypes = [1, 2, 3];
 list[int] validIntegerComparisons = [1, 2, 3, 4, 5];
@@ -23,7 +24,7 @@ bool isValidAutomaton(Automaton automaton)
 		
 		if(!labelsAreValid(integerExpressions, booleanExpressions, states))
 		{
-			return true;
+			return false;
 		}
 		
 		for(State state <- states)
@@ -43,6 +44,7 @@ bool isValidAutomaton(Automaton automaton)
 					{
 						if(!transitionForEachSymbol(statements, char))
 						{
+							println("Not each symbol has a transition for the state: <label>, which is required for a DFA");
 							return false;
 						}
 					}
@@ -50,6 +52,7 @@ bool isValidAutomaton(Automaton automaton)
 				
 				if(!validateStatements(statements, stateLabels))
 				{
+					println("Invalid statement");
 					return false;
 				}
 			}							
@@ -153,6 +156,7 @@ bool labelsAreValid(list[IntegerExpression] integers, list[BooleanExpression] bo
 		{
 			if(label in integerVarLabels || label == "PROCESSING_CHAR")
 			{
+				println("Integer labe: <label> defined more than once");
 				//return [];
 				return false;
 			}
@@ -169,6 +173,7 @@ bool labelsAreValid(list[IntegerExpression] integers, list[BooleanExpression] bo
 		{
 			if(label in booleanVarLabels || label == "PROCESSING_CHAR")
 			{
+				println("Boolean label: <label> defined more than once");
 				//return [];
 				return false;
 			}
@@ -184,6 +189,7 @@ bool labelsAreValid(list[IntegerExpression] integers, list[BooleanExpression] bo
 		{
 			if(label in stateLabels || label == "PROCESSING_CHAR")
 			{
+				println("State <label> defined more than once");
 				//return [];
 				return false;
 			}
@@ -195,6 +201,7 @@ bool labelsAreValid(list[IntegerExpression] integers, list[BooleanExpression] bo
 	
 	if(size(integerVarLabels & booleanVarLabels) > 0)
 	{
+		println("A label gets used for both a boolean and an integer");
 		//return [];
 		return false;
 	}
@@ -220,13 +227,34 @@ bool validateStatement(Statement statement, list[str] labelsOfStates)
 {
 	switch(statement)
 		{
-			case Transition(list[str] chars, str state): 
-				return state in labelsOfStates;
+			case Transition(list[str] chars, str state):
+			{
+				bool result = state in labelsOfStates;
+				if(!result)
+				{
+					println("State <state> not defined");
+				}
+				return result;
+			}
 			case Conditional(BooleanExpression expr, list[Statement] condtionalStatements): 
-				return validateStatements(condtionalStatements, labelsOfStates);
+			{
+				bool result = validateStatements(condtionalStatements, labelsOfStates);
+				if(!result)
+				{
+					println("Invalid conditional");
+				}
+				return result;
+			}
 			case ConditionalWithElse(BooleanExpression expr, list[Statement] statementsIfTrue, list[Statement] statementsIfFalse): 
-				return validateStatements(statementsIfTrue, labelsOfStates) || validateStatements(statementsIfFalse, labelsOfStates);
-			default: return false;
+			{
+				bool result = validateStatements(statementsIfTrue, labelsOfStates) || validateStatements(statementsIfFalse, labelsOfStates);
+				if(!result)
+				{
+					println("Invalid conditional with else");
+				}
+				return result;
+			}
+			default: return true;
 		}
 }
 

@@ -76,7 +76,7 @@ tuple[str, str] compileAutomatonSelf(Automaton a)
 			'			{
 			'				for(IState state : newStates)
 			'				{
-			'					if(copyWithNewState(<getAutomatonConstructorArguments(integers, booleans)>).isAccepted(input.substring(i + 1)))
+			'					if(copyWithNewState(state).isAccepted(input.substring(i + 1)))
 			'					{
 			'						return true;
 			'					}
@@ -126,14 +126,14 @@ str getAutomatonConstructorArguments(list[IntegerExpression] integers, list[Bool
 	{
 		if(Integer(str label, int initialValue) := integerExpr)
 		{
-			result += "automaton.<label>, ";
+			result += "<label>, ";
 		}
 	}
 	for(BooleanExpression boolExpr <- booleans)
 	{
 		if(Boolean(str label, bool initialValue) := boolExpr )
 		{
-			result += "automaton.<label>, ";
+			result += "<label>, ";
 		}
 	}
 	return result[..-2];
