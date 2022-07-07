@@ -18,10 +18,10 @@ import ListRelation;
 // Maybe return a list of strs? One for each file.
 list[tuple[str fileName, str content]] compileAutomaton(Automaton a)
 {
-	list[tuple[str fileName, str content]] javaFiles = [];
+	list[tuple[str fileName, str content]] javaFiles = [getMainClass(), compileAutomatonSelf(a), getStateInterface(), getFailState()];
 	if(Automaton(int automatonType, list[str] alphabet, list[IntegerExpression] integers, list[BooleanExpression] booleans, list[State] states) := a)
 	{
-  			javaFiles = javaFiles + compileAutomatonSelf(a) + getStateInterface() + getFailState();
+  			//javaFiles = javaFiles + getMainClass() + compileAutomatonSelf(a) + getStateInterface() + getFailState();
   			for(State state <- states)
   			{
   				javaFiles = javaFiles + <"State_<getLabelFromState(state)>", compile(state)>;
@@ -38,14 +38,12 @@ tuple[str, str] compileAutomatonSelf(Automaton a)
 		str automatonFileContent = "public class Automaton {
   			'	public int AutomatonType = <automatonType>;
   			'	private IState currentState = new State_<getBeginStateLabel(states)>();
-  			'
   			'	<for (integer <- integers) {>
-  			'		<compileIntegerVariable(integer)>
+  			'	<compileIntegerVariable(integer)>
   			'	<}>
   			'	<for (boolean <- booleans) {>
   			'	<compileBooleanVariable(boolean)>
   			'	<}>
-  			'
   			'	public Automaton()
 			'	{
 			'	}
@@ -55,7 +53,7 @@ tuple[str, str] compileAutomatonSelf(Automaton a)
 			'		for(int i = 0; i \< input.length(); i++)
 			'		{
 			'			String character = Character.toString(input.charAt(i));
-			'			this._currentState = this._currentState.processChar(this, character);
+			'			this.currentState = this.currentState.processChar(this, character);
 			'		}
 			'	
 			'	return this.currentState.isEndState();
@@ -66,12 +64,40 @@ tuple[str, str] compileAutomatonSelf(Automaton a)
 	}
 	else return <"", "">;
 }
+
+tuple[str, str] getMainClass() = 
+	<"Main", 
+	"import java.io.BufferedReader;
+	'import java.io.IOException;
+	'import java.io.InputStreamReader;
+	'
+	'public class Main {
+	'
+    '	public static void main(String args[]) throws IOException
+    '	{
+    '    	BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+    '    	while(true)
+    '    	{
+    '        	System.out.println(\"What string do you want to test? (type \'!quit\' to stop the program)\");
+    '        	String arg = reader.readLine();
+    '        	if(arg.equals(\"!quit\")) return;
+    '        	if(new Automaton().isAccepted(arg))
+    '        	{
+    '            	System.out.println(\"Accepted!\");
+    '        	}
+    '        	else
+    '        	{
+    '            	System.out.println(\"Rejected!\");
+    '        	}
+    '    	}
+    '	}
+	'}">;
   
 tuple[str,str] getStateInterface() = 
 	<"IState",
 	"public interface IState 
 	'{
-	'	public State processChar(Automaton automaton, String character);
+	'	public IState processChar(Automaton automaton, String character);
 	'
 	'	public boolean isEndState();
 	'}">;
@@ -81,7 +107,7 @@ tuple[str,str] getFailState() =
 	"public class Fail_State implements IState
 	'{
 	'	@Override
-	'	public State processChar(Automaton automaton, String character) {
+	'	public IState processChar(Automaton automaton, String character) {
 	'		return this;
 	'	}
 	'
@@ -134,7 +160,7 @@ str compile(State state)
 		'public class State_<label> implements IState
 		'{
 		'	@Override
-		'	public State processChar(Automaton automaton, String character) 
+		'	public IState processChar(Automaton automaton, String character) 
 		'	{
 		'		<for (statement <- statements) {>
 		'			<compile(statement)>
@@ -180,7 +206,7 @@ str compileTransition(list[str] chars, str stateName)
 	str charList = "";
 	for(str char <- chars)
 	{
-		charList += "<char>, ";
+		charList += "\"<char>\", ";
 	}
 	charList = charList[..-2];
 
@@ -235,16 +261,16 @@ str compileIntegerExpression(IntegerExpression intExpr)
 			return "automaton.<label>";
 		
 		case Addition(IntegerExpression val1, IntegerExpression val2): 
-			return "(<compileIntegerExpression(val1)> + <compileIntegerExpression(val2)>);";
+			return "(<compileIntegerExpression(val1)> + <compileIntegerExpression(val2)>)";
 		
 		case Subtraction(IntegerExpression val1, IntegerExpression val2): 
-			return "(<compileIntegerExpression(val1)> - <compileIntegerExpression(val2)>);";
+			return "(<compileIntegerExpression(val1)> - <compileIntegerExpression(val2)>)";
 		
 		case Multiplication(IntegerExpression val1, IntegerExpression val2): 
-			return "(<compileIntegerExpression(val1)> * <compileIntegerExpression(val2)>);";
+			return "(<compileIntegerExpression(val1)> * <compileIntegerExpression(val2)>)";
 		
 		case Division(IntegerExpression val1, IntegerExpression val2): 
-			return "(<compileIntegerExpression(val1)> / <compileIntegerExpression(val2)>);";
+			return "(<compileIntegerExpression(val1)> / <compileIntegerExpression(val2)>)";
 		
 		default: return "";
 	}

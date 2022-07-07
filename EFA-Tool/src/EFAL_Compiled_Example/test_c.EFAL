@@ -1,0 +1,19 @@
+DFA
+
+ALPHABET := a,b
+
+INITIAL FINAL STATE botheven:
+	TAKES a TO aunevenbeven
+	TAKES b TO aevenbuneven
+
+STATE bothuneven:
+	TAKES a TO aevenbuneven
+	TAKES b TO aunevenbeven
+
+STATE aunevenbeven:
+	TAKES a TO botheven
+	TAKES b TO bothuneven
+
+STATE aevenbuneven:
+	TAKES a TO bothuneven
+	TAKES b TO botheven

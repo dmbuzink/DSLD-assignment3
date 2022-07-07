@@ -14,6 +14,12 @@ public Automaton load((Automata) `<AutomataType t> <Alphabet a> <DeclarationList
 		//type, alphabet, integer, booleans, states
 		return Automaton(loadAutomataType(t), loadAlphabet(a), loadIntDeclarations(d), loadBoolDeclarations(d), loadStates(s));
 	};
+	
+public Automaton load((Automata) `<AutomataType t> <Alphabet a> <StateList s>`)
+	= {
+		//type, alphabet, integer, booleans, states
+		return Automaton(loadAutomataType(t), loadAlphabet(a), [], [], loadStates(s));
+	};
 
 map[str label, IntegerExpression integer] declaredIntegers = ();
 map[str label, BooleanExpression boolean] declaredBooleans = ();
