@@ -3,11 +3,12 @@ module EFAL::Syntax
 layout Whitespace = [\t-\n\r\ ]*; 
 
 //To be filled in
-keyword Keywords = "TRANS" | "TRUE" | "FALSE" | "TAKES" | "TO" | "IF" | "ELSE";
+keyword Keywords = "TRANS" | "TRUE" | "FALSE" | "TAKES" | "TO" | "IF" | "ELSE" | "FI" | "PROCESSING_CHAR" | "INT" | "BOOL";
 	 
 lexical IntegerLiteral = [0-9]+;
 lexical Boolean = "TRUE" | "FALSE";
-lexical Label = [a-z]+ \Keywords;
+lexical Char = [a-zA-Z];
+lexical Label = (Char [a-zA-Z0-9_]*) \Keywords;
 
 start syntax Automata
 	= AutomataType Alphabet DeclarationList StateList
@@ -21,11 +22,11 @@ syntax AutomataType
 	;
 
 syntax Alphabet
-	= "ALPHABET" ":=" LabelList;
+	= "ALPHABET" ":=" CharList;
 	
-syntax LabelList
-	= Label
-	| Label "," LabelList
+syntax CharList
+	= Char
+	| Char "," CharList
 	;
 
 syntax StateList
@@ -34,22 +35,27 @@ syntax StateList
 	;
 
 syntax State
-	= "INITIAL" "STATE" Label ":" StateContentList
-	| "FINAL" "STATE" Label ":" StateContentList
-	| "INITIAL" "FINAL" "STATE" Label ":" StateContentList
-	| "FINAL" "INITIAL" "STATE" Label ":" StateContentList
-	| "STATE" Label ":" StateContentList
+	= "INITIAL" "STATE" Label StateContentListOrEmpty
+	| "FINAL" "STATE" Label StateContentListOrEmpty
+	| "INITIAL" "FINAL" "STATE" Label StateContentListOrEmpty
+	| "FINAL" "INITIAL" "STATE" Label StateContentListOrEmpty
+	| "STATE" Label StateContentListOrEmpty
 	;	
 	
+syntax StateContentList
+	= StateContent StateContentList
+	| StateContent
+	;
+
 syntax StateContent
 	= TransitionLabel
 	| VariableAssignment
 	| IFELSE
 	;
 	
-syntax StateContentList
-	= StateContent StateContentList
-	| StateContent
+syntax StateContentListOrEmpty
+	= ":" StateContentList
+	| ":"
 	;
 
 syntax DeclarationList
@@ -64,8 +70,8 @@ syntax Declaration
 	;
 
 syntax IFELSE
-	= "IF" BoolExpr ":" StateContentList "ELSE" ":" StateContentList
-	| "IF" BoolExpr ":" StateContentList
+	= "IF" BoolExpr ":" StateContentList "ELSE" ":" StateContentList "FI"
+	| "IF" BoolExpr ":" StateContentList "FI"
 	;
 
 syntax VariableAssignment
@@ -91,11 +97,11 @@ syntax BoolExpr
 	> BoolExpr "OR" BoolExpr
 	> BoolExpr "=" BoolExpr
 	> IntExpr "=" IntExpr
-	//For some reason > etc. are not accepted by rascal
 	> IntExpr '\>' IntExpr
 	> IntExpr '\<' IntExpr
 	> IntExpr '\<'"=" IntExpr
 	| IntExpr '\>'"=" IntExpr
+	| "PROCESSING_CHAR" "=" Char
 	;
 	
 syntax TransitionLabel
@@ -104,4 +110,4 @@ syntax TransitionLabel
 	;
 	
 syntax Transition
-	= "TAKES" LabelList "TO" Label;
+	= "TAKES" CharList "TO" Label;
