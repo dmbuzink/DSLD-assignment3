@@ -1,0 +1,19 @@
+NFA
+
+ALPHABET := a,b
+
+INT amount_of_ab := 0
+
+TRANS BackToStart := TAKES a,b TO x
+
+INITIAL STATE x:
+	TRANS BackToStart
+	IF amount_of_ab < 3:
+		TAKES b TO y
+	amount_of_ab := amount_of_ab + 1
+
+STATE y:
+	TAKES a,b TO z
+
+FINAL STATE z:
+	TRANS BackToStart
