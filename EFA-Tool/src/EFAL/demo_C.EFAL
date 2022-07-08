@@ -2,7 +2,7 @@ NFA
 
 ALPHABET := a,d,e,s,p,M,P,0,2,_
 
-BOOL encountered_s_previously := false
+BOOL encountered_s_previously := FALSE
 
 INITIAL STATE start_state:
 	TAKES 2 TO s2
@@ -34,7 +34,7 @@ STATE s9:
 STATE s10:
 	IF PROCESSING_CHAR = s:
 		IF NOT encountered_s_previously:
-			encountered_s_previously := true
+			encountered_s_previously := TRUE
 			TAKES s TO s10
 		ELSE:
 			TAKES s TO s11

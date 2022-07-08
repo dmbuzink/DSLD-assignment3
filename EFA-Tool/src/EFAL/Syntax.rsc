@@ -7,8 +7,8 @@ keyword Keywords = "TRANS" | "TRUE" | "FALSE" | "TAKES" | "TO" | "IF" | "ELSE" |
 	 
 lexical IntegerLiteral = [0-9]+;
 lexical Boolean = "TRUE" | "FALSE";
-lexical Char = [a-zA-Z];
-lexical Label = (Char [a-zA-Z0-9_]*) \Keywords;
+lexical Char = [a-zA-Z0-9_];
+lexical Label = ([a-zA-Z][a-zA-Z0-9_]*) \Keywords;
 
 start syntax Automata
 	= AutomataType Alphabet DeclarationList StateList
