@@ -12,6 +12,7 @@ public Automaton cst2ast(Tree tree){
 public Automaton load((Automata) `<AutomataType t> <Alphabet a> <DeclarationList d> <StateList s>`)
 	= {
 		//type, alphabet, integer, booleans, states
+		loadTransitionDeclarations(d);
 		return Automaton(loadAutomataType(t), loadAlphabet(a), loadIntDeclarations(d), loadBoolDeclarations(d), loadStates(s));
 	};
 	
@@ -23,28 +24,36 @@ public Automaton load((Automata) `<AutomataType t> <Alphabet a> <StateList s>`)
 
 map[str label, IntegerExpression integer] declaredIntegers = ();
 map[str label, BooleanExpression boolean] declaredBooleans = ();
+map[str label, Statement transition] declaredTransitions = ();
 	
 public IntegerExpression loadInteger(Label l) = declaredIntegers["<l>"];
 public BooleanExpression loadBoolean(Label l) = declaredBooleans["<l>"];
+public Statement loadTransition(Label l) = declaredTransitions["<l>"];
 	
 public list[State] loadStates((StateList) `<State s> <StateList sl>`) = [loadState(s)] + loadStates(sl);
 public list[State] loadStates((StateList) `<State s>`) = [loadState(s)];
-public State loadState((State) `INITIAL STATE <Label l> : <StateContentList sc>`) = State("<l>", loadStateContentList(sc), true, false);
-public State loadState((State) `INITIAL FINAL STATE <Label l> : <StateContentList sc>`) = State("<l>", loadStateContentList(sc), true, true);
-public State loadState((State) `FINAL INITIAL STATE <Label l> : <StateContentList sc>`) = State("<l>", loadStateContentList(sc), true, true);
-public State loadState((State) `FINAL STATE <Label l> : <StateContentList sc>`) = State("<l>", loadStateContentList(sc), false, true);
-public State loadState((State) `STATE <Label l> : <StateContentList sc>`) = State("<l>", loadStateContentList(sc), false, false);
+public State loadState((State) `INITIAL STATE <Label l> <StateContentListOrEmpty sc>`) = State("<l>", loadStateContentListOrEmpty(sc), true, false);
+public State loadState((State) `INITIAL FINAL STATE <Label l> <StateContentListOrEmpty sc>`) = State("<l>", loadStateContentListOrEmpty(sc), true, true);
+public State loadState((State) `FINAL INITIAL STATE <Label l> <StateContentListOrEmpty sc>`) = State("<l>", loadStateContentListOrEmpty(sc), true, true);
+public State loadState((State) `FINAL STATE <Label l> <StateContentListOrEmpty sc>`) = State("<l>", loadStateContentListOrEmpty(sc), false, true);
+public State loadState((State) `STATE <Label l> <StateContentListOrEmpty sc>`) = State("<l>", loadStateContentListOrEmpty(sc), false, false);
+	
+public list[Statement] loadStateContentListOrEmpty((StateContentListOrEmpty) `: <StateContentList s>`) = loadStateContentList(s);
+public list[Statement] loadStateContentListOrEmpty((StateContentListOrEmpty) `:`) = [];
 	
 public list[Statement] loadStateContentList((StateContentList) `<StateContent s> <StateContentList l>`) = loadStateContent(s) + loadStateContentList(l);
 public list[Statement] loadStateContentList((StateContentList) `<StateContent s>`) = loadStateContent(s);	
-public list[Statement] loadStateContent((StateContent) `<Transition t>`) = [loadTransition(t)];
+//public list[Statement] loadStateContentList((StateContentList) ``) = [];	
+public list[Statement] loadStateContent((StateContent) `<TransitionLabel t>`) = [loadTransition(t)];
 public list[Statement] loadStateContent((StateContent) `<VariableAssignment va>`) = [loadVariableAss(va)];
 public list[Statement] loadStateContent((StateContent) `<IFELSE ie>`) = [loadIFELSE(ie)];
 
-public Statement loadIFELSE((IFELSE) `IF <BoolExpr b> : <StateContentList sc1> ELSE : <StateContentList sc2>`) = ConditionalWithElse(loadBoolExpr(b), loadStateContentList(sc1), loadStateContentList(sc2));
-public Statement loadIFELSE((IFELSE) `IF <BoolExpr b> : <StateContentList sc1>`) = Conditional(loadBoolExpr(b), loadStateContentList(sc1));
+public Statement loadIFELSE((IFELSE) `IF <BoolExpr b> : <StateContentList sc1> ELSE : <StateContentList sc2> FI`) = ConditionalWithElse(loadBoolExpr(b), loadStateContentList(sc1), loadStateContentList(sc2));
+public Statement loadIFELSE((IFELSE) `IF <BoolExpr b> : <StateContentList sc1> FI`) = Conditional(loadBoolExpr(b), loadStateContentList(sc1));
 
-public Statement loadTransition((Transition) `TAKES <LabelList ll> TO <Label l>`) = Transition(loadLabellist(ll), "<l>");
+public Statement loadTransition((TransitionLabel) `<Transition t>`) = loadTransition(t);
+public Statement loadTransition((TransitionLabel) `TRANS <Label l>`) = loadTransition(l);
+public Statement loadTransition((Transition) `TAKES <CharList ll> TO <Label l>`) = Transition(loadLabellist(ll), "<l>");
 
 public Statement loadVariableAss((VariableAssignment) `<Label l> := <BoolExpr e>`) = BooleanAssignment(loadBoolean(l), loadBoolExpr(e));
 public Statement loadVariableAss((VariableAssignment) `<Label l> := <IntExpr i>`) = IntegerAssignment(loadInteger(l), loadIntExpr(i));
@@ -60,6 +69,7 @@ public BooleanExpression loadBoolExpr((BoolExpr) `<IntExpr i1> \<= <IntExpr i2>`
 public BooleanExpression loadBoolExpr((BoolExpr) `<IntExpr i1> = <IntExpr i2>`) = IntegerComparison(loadIntExpr(i1), loadIntExpr(i2), 3);
 public BooleanExpression loadBoolExpr((BoolExpr) `<IntExpr i1> \>= <IntExpr i2>`) = IntegerComparison(loadIntExpr(i1), loadIntExpr(i2), 4);
 public BooleanExpression loadBoolExpr((BoolExpr) `<IntExpr i1> \> <IntExpr i2>`) = IntegerComparison(loadIntExpr(i1), loadIntExpr(i2), 5);
+public BooleanExpression loadBoolExpr((BoolExpr) `PROCESSING_CHAR = <Char c>`) = ProcessingCharComparison("<c>");
 
 public IntegerExpression loadIntExpr((IntExpr) `<IntegerLiteral i>`) = IntegerValue(toInt("<i>"));
 public IntegerExpression loadIntExpr((IntExpr) `<Label l>`) = loadInteger(l);
@@ -72,9 +82,9 @@ public int loadAutomataType((AutomataType) `DFA`) = 1;
 public int loadAutomataType((AutomataType) `NFA`) = 2;
 public int loadAutomataType((AutomataType) `ENFA`) = 3;
 
-public list[str] loadAlphabet((Alphabet) `ALPHABET := <LabelList l>`) = loadLabellist(l);
-public list[str] loadLabellist((LabelList) `<Label l> , <LabelList ls>`) = ["<l>"] + loadLabellist(ls);
-public list[str] loadLabellist((LabelList) `<Label l>`) = ["<l>"];
+public list[str] loadAlphabet((Alphabet) `ALPHABET := <CharList l>`) = loadLabellist(l);
+public list[str] loadLabellist((CharList) `<Char l> , <CharList ls>`) = ["<l>"] + loadLabellist(ls);
+public list[str] loadLabellist((CharList) `<Char l>`) = ["<l>"];
 
 public list[IntegerExpression] loadIntDeclarations((DeclarationList) `<Declaration d> <DeclarationList dl>`) = loadIntDeclaration(d) + loadIntDeclarations(dl);
 public list[IntegerExpression] loadIntDeclarations((DeclarationList) `<Declaration d>`) = loadIntDeclaration(d);
@@ -97,3 +107,12 @@ public list[BooleanExpression] loadBoolDeclaration((Declaration) `BOOL <Label l>
 };
 public bool loadBool ((Boolean) `TRUE`) = true;
 public bool loadBool ((Boolean) `FALSE`) = false;
+
+public list[Transition] loadTransitionDeclarations((DeclarationList) `<Declaration d> <DeclarationList dl>`) = loadTransitionDeclarations(d) + loadTransitionDeclarations(dl);
+public list[Transition] loadTransitionDeclarations((DeclarationList) `<Declaration d>`) = loadTransitionDeclarations(d);
+public list[Transition] loadTransitionDeclarations((Declaration) `INT <Label l> := <IntegerLiteral i>`) = [];
+public list[Transition] loadTransitionDeclarations((Declaration) `BOOL <Label l> := <Boolean b>`) = [];
+public list[Transition] loadTransitionDeclarations((Declaration) `TRANS <Label l> := <Transition t>`) = {
+	declaredTransitions["<l>"] = loadTransition(t);
+	return [];
+};
