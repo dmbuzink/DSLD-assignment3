@@ -1,0 +1,1 @@
+Accepts strings where the second to last character is b and before that b there are less than 3 characters
