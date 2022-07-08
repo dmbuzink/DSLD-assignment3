@@ -3,6 +3,7 @@ NFA
 ALPHABET := a,b
 
 INT amount_of_ab := 0
+INT some_variable := 0
 
 TRANS BackToStart := TAKES a,b TO x
 
@@ -12,9 +13,17 @@ INITIAL STATE x:
 		TAKES b TO y
 	FI
 	amount_of_ab := amount_of_ab + 1
-	
+
 STATE y:
 	TAKES a,b TO z
+	
+	
+	IF some_variable < 3:
+		TAKES a TO y
+	FI
+	IF some_variable >= 3:
+		TAKES a TO z
+	FI
 
 FINAL STATE z:
 	TRANS BackToStart

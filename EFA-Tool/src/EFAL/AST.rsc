@@ -7,15 +7,11 @@ module EFAL::AST
 data Automaton = Automaton(int automatonType, list[str] alphabet, 
 	list[IntegerExpression] integers, list[BooleanExpression] booleans, list[State] states);
 
-//data Integer = Integer(str label, int val);
-
-//data Boolean = Boolean(str label, bool val);
-
 data State = State(str label, list[Statement] statements, bool isBeginState, bool isEndingState);
 
 data Statement = 
 	  Transition(list[str] chars, str state)
-	| Conditional(BooleanExpression expr, list[Statement] statements) // Else can be a conditional with as the condition: "NOT IF_CONDITION"
+	| Conditional(BooleanExpression expr, list[Statement] statements)
 	| ConditionalWithElse(BooleanExpression expr, list[Statement] statementsIfTrue, list[Statement] statementsIfFalse)
 	| IntegerAssignment(IntegerExpression integer, IntegerExpression intExpr)
 	| BooleanAssignment(BooleanExpression boolean, BooleanExpression boolExpr);
@@ -28,8 +24,6 @@ data BooleanExpression =
 	| OrCondition(BooleanExpression cond1, BooleanExpression cond2)
 	| IntegerComparison(IntegerExpression int1, IntegerExpression int2, int integerComparer) // Integer comparer: 1: <, 2: <=, 3: =, 4: >=, 5: >
 	| BooleanComparison(BooleanExpression bool1, BooleanExpression bool2); 
-	// note: In the original syntax you may have: 
-	// "if X" this can become a BooleanComparison with X and true. Likewise If not X with false
 
 data IntegerExpression = 
 	  IntegerValue(int val)
