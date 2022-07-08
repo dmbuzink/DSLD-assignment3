@@ -15,6 +15,12 @@ public Automaton load((Automata) `<AutomataType t> <Alphabet a> <DeclarationList
 		loadTransitionDeclarations(d);
 		return Automaton(loadAutomataType(t), loadAlphabet(a), loadIntDeclarations(d), loadBoolDeclarations(d), loadStates(s));
 	};
+	
+public Automaton load((Automata) `<AutomataType t> <Alphabet a> <StateList s>`)
+	= {
+		//type, alphabet, integer, booleans, states
+		return Automaton(loadAutomataType(t), loadAlphabet(a), [], [], loadStates(s));
+	};
 
 map[str label, IntegerExpression integer] declaredIntegers = ();
 map[str label, BooleanExpression boolean] declaredBooleans = ();
@@ -72,9 +78,9 @@ public IntegerExpression loadIntExpr((IntExpr) `<IntExpr i1> - <IntExpr i2>`) = 
 public IntegerExpression loadIntExpr((IntExpr) `<IntExpr i1> * <IntExpr i2>`) = Multiplication(loadIntExpr(i1), loadIntExpr(i2));
 public IntegerExpression loadIntExpr((IntExpr) `<IntExpr i1> / <IntExpr i2>`) = Division(loadIntExpr(i1), loadIntExpr(i2));
 
-public int loadAutomataType((AutomataType) `DFA`) = 0;
-public int loadAutomataType((AutomataType) `NFA`) = 1;
-public int loadAutomataType((AutomataType) `ENFA`) = 2;
+public int loadAutomataType((AutomataType) `DFA`) = 1;
+public int loadAutomataType((AutomataType) `NFA`) = 2;
+public int loadAutomataType((AutomataType) `ENFA`) = 3;
 
 public list[str] loadAlphabet((Alphabet) `ALPHABET := <CharList l>`) = loadLabellist(l);
 public list[str] loadLabellist((CharList) `<Char l> , <CharList ls>`) = ["<l>"] + loadLabellist(ls);

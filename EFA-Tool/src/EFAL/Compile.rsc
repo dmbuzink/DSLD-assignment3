@@ -3,6 +3,7 @@ module EFAL::Compile
 import EFAL::AST;
 import Boolean;
 import ListRelation;
+import List;
 
 
 
@@ -18,10 +19,10 @@ import ListRelation;
 // Maybe return a list of strs? One for each file.
 list[tuple[str fileName, str content]] compileAutomaton(Automaton a)
 {
-	list[tuple[str fileName, str content]] javaFiles = [];
+	list[tuple[str fileName, str content]] javaFiles = [getMainClass(), compileAutomatonSelf(a), getStateInterface(), getFailState()];
 	if(Automaton(int automatonType, list[str] alphabet, list[IntegerExpression] integers, list[BooleanExpression] booleans, list[State] states) := a)
 	{
-  			javaFiles = javaFiles + compileAutomatonSelf(a) + getStateInterface() + getFailState();
+  			//javaFiles = javaFiles + getMainClass() + compileAutomatonSelf(a) + getStateInterface() + getFailState();
   			for(State state <- states)
   			{
   				javaFiles = javaFiles + <"State_<getLabelFromState(state)>", compile(state)>;
@@ -35,30 +36,61 @@ tuple[str, str] compileAutomatonSelf(Automaton a)
 { 
 	if(Automaton(int automatonType, list[str] alphabet, list[IntegerExpression] integers, list[BooleanExpression] booleans, list[State] states) := a)
 	{
-		str automatonFileContent = "public class Automaton {
-  			'	public int AutomatonType = <automatonType>;
+		str automatonFileContent = "import java.util.ArrayList;
+			'
+			'public class Automaton {
+  			'	private int automatonType = <automatonType>;
   			'	private IState currentState = new State_<getBeginStateLabel(states)>();
-  			'
   			'	<for (integer <- integers) {>
-  			'		<compileIntegerVariable(integer)>
+  			'	<compileIntegerVariable(integer)>
   			'	<}>
   			'	<for (boolean <- booleans) {>
   			'	<compileBooleanVariable(boolean)>
   			'	<}>
-  			'
   			'	public Automaton()
 			'	{
 			'	}
-			'	
+			'
+			'	public Automaton(<getAutomatonConstructorParameters(integers, booleans)>)
+			'	{
+			'		this.currentState = state;
+			'		<for (integer <- integers) {>
+  			'		<compileCopyInteger(integer)>
+  			'		<}>
+  			'		<for (boolean <- booleans) {>
+  			'		<compileCopyBoolean(boolean)>
+  			'		<}>
+			'	}
+			'
 			'	public boolean isAccepted(String input)
 			'   {
 			'		for(int i = 0; i \< input.length(); i++)
 			'		{
 			'			String character = Character.toString(input.charAt(i));
-			'			this._currentState = this._currentState.processChar(this, character);
+			'			ArrayList\<IState\> newStates = this.currentState.processChar(this, character);
+			'			if(this.automatonType == 1 || newStates.size() == 1)
+			'			{
+			'				this.currentState = newStates.get(0);
+			'			}
+			'			else
+			'			{
+			'				for(IState state : newStates)
+			'				{
+			'					if(copyWithNewState(state).isAccepted(input.substring(i + 1)))
+			'					{
+			'						return true;
+			'					}
+			'				}
+			'				return false;
+			'			}
 			'		}
 			'	
-			'	return this.currentState.isEndState();
+			'		return this.currentState.isEndState();
+			'	}
+			'	
+			'	private Automaton copyWithNewState(IState state)
+			'	{
+			'		return new Automaton(<getAutomatonConstructorArguments(integers, booleans)>);
 			'	}
   			'}
   			'";
@@ -66,23 +98,121 @@ tuple[str, str] compileAutomatonSelf(Automaton a)
 	}
 	else return <"", "">;
 }
+
+str getAutomatonConstructorParameters(list[IntegerExpression] integers, list[BooleanExpression] booleans)
+{
+	str result = "IState state, ";
+	for(IntegerExpression integerExpr <- integers)
+	{
+		if(Integer(str label, int initialValue) := integerExpr)
+		{
+			result += "int <label>, ";
+		}
+	}
+	for(BooleanExpression boolExpr <- booleans)
+	{
+		if(Boolean(str label, bool initialValue) := boolExpr )
+		{
+			result += "boolean <label>, ";
+		}
+	}
+	return result[..-2];
+}
+
+str getAutomatonConstructorArguments(list[IntegerExpression] integers, list[BooleanExpression] booleans)
+{
+	str result = "state, ";
+	for(IntegerExpression integerExpr <- integers)
+	{
+		if(Integer(str label, int initialValue) := integerExpr)
+		{
+			result += "<label>, ";
+		}
+	}
+	for(BooleanExpression boolExpr <- booleans)
+	{
+		if(Boolean(str label, bool initialValue) := boolExpr )
+		{
+			result += "<label>, ";
+		}
+	}
+	return result[..-2];
+}
+
+str compileCopyInteger(IntegerExpression integerExpr)
+{
+	if(Integer(str label, int initialValue) := integerExpr)
+	{
+		return "this.<label> = <label>;";
+	}
+	else
+	{
+		return "";
+	}
+}
+
+str compileCopyBoolean(BooleanExpression boolExpression)
+{
+	if(Boolean(str label, bool initialValue) := boolExpression)
+	{
+		return "this.<label> = <label>;";
+	}
+	else
+	{
+		return "";
+	}
+}
+
+tuple[str, str] getMainClass() = 
+	<"Main", 
+	"import java.io.BufferedReader;
+	'import java.io.IOException;
+	'import java.io.InputStreamReader;
+	'
+	'public class Main {
+	'
+    '	public static void main(String args[]) throws IOException
+    '	{
+    '    	BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+    '    	while(true)
+    '    	{
+    '        	System.out.println(\"What string do you want to test? (type \'!quit\' to stop the program)\");
+    '        	String arg = reader.readLine();
+    '        	if(arg.equals(\"!quit\")) return;
+    '        	if(new Automaton().isAccepted(arg))
+    '        	{
+    '            	System.out.println(\"Accepted!\");
+    '        	}
+    '        	else
+    '        	{
+    '            	System.out.println(\"Rejected!\");
+    '        	}
+    '    	}
+    '	}
+	'}">;
   
 tuple[str,str] getStateInterface() = 
 	<"IState",
-	"public interface IState 
+	"import java.util.ArrayList;
+	'
+	'public interface IState 
 	'{
-	'	public State processChar(Automaton automaton, String character);
+	'	public ArrayList\<IState\> processChar(Automaton automaton, String character);
 	'
 	'	public boolean isEndState();
 	'}">;
 
 tuple[str,str] getFailState() = 
 	<"Fail_State",
-	"public class Fail_State implements IState
+	"import java.util.ArrayList;
+	'
+	'public class Fail_State implements IState
 	'{
 	'	@Override
-	'	public State processChar(Automaton automaton, String character) {
-	'		return this;
+	'	public ArrayList\<IState\> processChar(Automaton automaton, String character) {
+	'		ArrayList\<IState\> states = new ArrayList\<IState\>();
+	'		states.add(this);
+			return states;
 	'	}
 	'
 	'	@Override
@@ -130,16 +260,22 @@ str compile(State state)
 	{
 		return 
 		"import java.util.Arrays;
+		'import java.util.ArrayList;
 		'
 		'public class State_<label> implements IState
 		'{
 		'	@Override
-		'	public State processChar(Automaton automaton, String character) 
+		'	public ArrayList\<IState\> processChar(Automaton automaton, String character) 
 		'	{
+		'		ArrayList\<IState\> newStates = new ArrayList\<IState\>();
 		'		<for (statement <- statements) {>
 		'			<compile(statement)>
 		'		<}>
-		'		return new Fail_State();		
+		'		if(newStates.size() == 0)
+		'		{
+		'			newStates.add(new Fail_State());
+		'		}	
+		'		return newStates;
 		'	}
 		'
 		'	@Override
@@ -180,14 +316,14 @@ str compileTransition(list[str] chars, str stateName)
 	str charList = "";
 	for(str char <- chars)
 	{
-		charList += "<char>, ";
+		charList += "\"<char>\", ";
 	}
 	charList = charList[..-2];
 
 	return 
 	"if(Arrays.asList(<charList>).contains(character))
 	'{	
-	'	return new State_<stateName>();
+	'	newStates.add(new State_<stateName>());
 	'}";
 }
 
@@ -235,16 +371,16 @@ str compileIntegerExpression(IntegerExpression intExpr)
 			return "automaton.<label>";
 		
 		case Addition(IntegerExpression val1, IntegerExpression val2): 
-			return "(<compileIntegerExpression(val1)> + <compileIntegerExpression(val2)>);";
+			return "(<compileIntegerExpression(val1)> + <compileIntegerExpression(val2)>)";
 		
 		case Subtraction(IntegerExpression val1, IntegerExpression val2): 
-			return "(<compileIntegerExpression(val1)> - <compileIntegerExpression(val2)>);";
+			return "(<compileIntegerExpression(val1)> - <compileIntegerExpression(val2)>)";
 		
 		case Multiplication(IntegerExpression val1, IntegerExpression val2): 
-			return "(<compileIntegerExpression(val1)> * <compileIntegerExpression(val2)>);";
+			return "(<compileIntegerExpression(val1)> * <compileIntegerExpression(val2)>)";
 		
 		case Division(IntegerExpression val1, IntegerExpression val2): 
-			return "(<compileIntegerExpression(val1)> / <compileIntegerExpression(val2)>);";
+			return "(<compileIntegerExpression(val1)> / <compileIntegerExpression(val2)>)";
 		
 		default: return "";
 	}

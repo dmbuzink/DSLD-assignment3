@@ -2,13 +2,16 @@ module EFAL::Check
 
 import EFAL::AST;
 import List;
+import Boolean;
+import IO;
 
-List[int] validAutomationTypes = [1, 2, 3];
-List[int] validIntegerComparisons = [1, 2, 3, 4, 5];
+list[int] validAutomationTypes = [1, 2, 3];
+list[int] validIntegerComparisons = [1, 2, 3, 4, 5];
 
-bool checkAutomaton(Automaton automaton)
+bool isValidAutomaton(Automaton automaton)
 {
-	if(Automaton(int automationType, list[str] alphabet, list[Statement] statements, list[Integer] integers, list[Boolean] booleans, list[State] states) := automaton)
+	if(Automaton(int automationType, list[str] alphabet, list[IntegerExpression] integerExpressions, 
+		list[BooleanExpression] booleanExpressions, list[State] states) := automaton)
 	{
 		if (!(automationType in validAutomationTypes))
 		{
@@ -17,16 +20,16 @@ bool checkAutomaton(Automaton automaton)
 		
 		int numberOfBeginStates = 0;
 		int numberOfEndStates = 0;
+		list[str] stateLabels = getAllStateLabels(states);
 		
-		getAllLabels(integers, booleans, states);
-		//list[list[str]] labelLists = 
-		//list[str] integerLabels = labelLists[0];
-		//list[str] booleanLabels = labelLists[1];
-		//list[str] stateLabels = labelLists[2];
+		if(!labelsAreValid(integerExpressions, booleanExpressions, states))
+		{
+			return false;
+		}
 		
 		for(State state <- states)
 		{
-			bool isValid = false;
+			//bool isValid = false;
 			
 			if(State(str label, list[Statement] statements, bool isBeginState, bool isEndingState) := state)
 			{
@@ -41,10 +44,17 @@ bool checkAutomaton(Automaton automaton)
 					{
 						if(!transitionForEachSymbol(statements, char))
 						{
+							println("Not each symbol has a transition for the state: <label>, which is required for a DFA");
 							return false;
 						}
 					}
-				}				
+				}
+				
+				if(!validateStatements(statements, stateLabels))
+				{
+					println("Invalid statement");
+					return false;
+				}
 			}							
 		}
 		
@@ -53,7 +63,7 @@ bool checkAutomaton(Automaton automaton)
 		{
 			return false;
 		}
-		if(numberOfEndStates > 0)
+		if(numberOfEndStates == 0)
 		{
 			return false;
 		}
@@ -69,7 +79,7 @@ bool transitionForEachSymbol(list[Statement] statements, str symbol)
 	{
 		switch(statement)
 		{
-			case Transition(list[str] chars, State state):
+			case Transition(list[str] chars, str stateLabel):
 			{
 				if(symbol in chars)
 				{
@@ -77,7 +87,7 @@ bool transitionForEachSymbol(list[Statement] statements, str symbol)
 				}
 			}
 			
-			case ConditionalWithElse(Expression expr, list[Statement] statementsIfTrue, list[Statement] statementsIfFalse):
+			case ConditionalWithElse(BooleanExpression expr, list[Statement] statementsIfTrue, list[Statement] statementsIfFalse):
 			{
 				// Check if there exists a transition for symbol in both branches, if so a symbol will always have a transition
 				if(transitionForEachSymbol(statementsIfTrue, symbol) && transitionForEachSymbol(statementsIfFalse, symbol))
@@ -97,76 +107,78 @@ bool transitionForEachSymbol(list[Statement] statements, str symbol)
 
 // TODO: Remove
 // Ensure that mentioned boolean/integer variables is pre-defined and not double defined
-bool validateBooleanVariables(list[Statement] statements, list[Integer] integers, list[Boolean] booleans)
-{
-	// Create list with all pre-defined integers, also checking for double definitions.
-	list[str] integerVarLabels = [];
-	for(Integer integer <- integers)
-	{
-		if(Integer(str label, int val) := integer)
-		{
-			if(label in integerVarLabels)
-			{
-				return false;
-			}
-			
-			integerVarLabels.push(label);
-		}
-	}
-	
-	// Create list with all pre-defined booleans, also checking for double definitions.
-	list[str] booleanVarLabels = [];
-	for(Boolean boolean <- booleans)
-	{
-		if(Boolean(str label, bool val) := boolean)
-		{
-			if(label in booleanVarLabels)
-			{
-				return false;
-			}
-			
-			booleanVarLabels.push(label);
-		}
-	}
-	
-	list[str] labelIntersection = integerVarLabels & booleanVarLabels;
-	//if(labelIntersection)
-}
+//bool validateBooleanVariables(list[Statement] statements, list[Integer] integers, list[Boolean] booleans)
+//{
+//	// Create list with all pre-defined integers, also checking for double definitions.
+//	list[str] integerVarLabels = [];
+//	for(Integer integer <- integers)
+//	{
+//		if(Integer(str label, int val) := integer)
+//		{
+//			if(label in integerVarLabels)
+//			{
+//				return false;
+//			}
+//			
+//			integerVarLabels.push(label);
+//		}
+//	}
+//	
+//	// Create list with all pre-defined booleans, also checking for double definitions.
+//	list[str] booleanVarLabels = [];
+//	for(Boolean boolean <- booleans)
+//	{
+//		if(Boolean(str label, bool val) := boolean)
+//		{
+//			if(label in booleanVarLabels)
+//			{
+//				return false;
+//			}
+//			
+//			booleanVarLabels.push(label);
+//		}
+//	}
+//	
+//	list[str] labelIntersection = integerVarLabels & booleanVarLabels;
+//	//if(labelIntersection)
+//}
 
 // Get labels of states, integers and booleans
 // Returns an empty list if invalid
 //list[list[str]] 
-bool getAllLabels(list[Integer] integers, list[Boolean] booleans, list[State] states)
+bool labelsAreValid(list[IntegerExpression] integers, list[BooleanExpression] booleans, list[State] states)
 {
 	// Create list with all pre-defined integers, also checking for double definitions.
 	list[str] integerVarLabels = [];
-	for(Integer integer <- integers)
+	for(IntegerExpression integer <- integers)
 	{
 		if(Integer(str label, int val) := integer)
 		{
 			if(label in integerVarLabels || label == "PROCESSING_CHAR")
 			{
+				println("Integer labe: <label> defined more than once");
 				//return [];
 				return false;
 			}
 			
-			integerVarLabels.push(label);
+			integerVarLabels += label;
 		}
 	}
 	
 	// Create list with all pre-defined booleans, also checking for double definitions.
 	list[str] booleanVarLabels = [];
-	for(Boolean boolean <- booleans)
+	for(BooleanExpression boolean <- booleans)
 	{
 		if(Boolean(str label, bool val) := boolean)
 		{
 			if(label in booleanVarLabels || label == "PROCESSING_CHAR")
 			{
+				println("Boolean label: <label> defined more than once");
 				//return [];
 				return false;
 			}
 			
-			booleanVarLabels.push(label);
+			booleanVarLabels += label;
 		}
 	}
 	
@@ -177,23 +189,86 @@ bool getAllLabels(list[Integer] integers, list[Boolean] booleans, list[State] st
 		{
 			if(label in stateLabels || label == "PROCESSING_CHAR")
 			{
+				println("State <label> defined more than once");
 				//return [];
 				return false;
 			}
 			
-			stateLabels.push(label);
+			stateLabels += label;
 		}
 	}
 	
 	
 	if(size(integerVarLabels & booleanVarLabels) > 0)
 	{
+		println("A label gets used for both a boolean and an integer");
 		//return [];
 		return false;
 	}
 	
+	
 	//return [integerVarLabels, booleanVarLabels, stateLabels];
 	return true;
+}
+
+bool validateStatements(list[Statement] statements, list[str] labelsOfStates)
+{
+	for(Statement statement <- statements)
+	{
+		if(!validateStatement(statement, labelsOfStates))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+bool validateStatement(Statement statement, list[str] labelsOfStates)
+{
+	switch(statement)
+		{
+			case Transition(list[str] chars, str state):
+			{
+				bool result = state in labelsOfStates;
+				if(!result)
+				{
+					println("State <state> not defined");
+				}
+				return result;
+			}
+			case Conditional(BooleanExpression expr, list[Statement] condtionalStatements): 
+			{
+				bool result = validateStatements(condtionalStatements, labelsOfStates);
+				if(!result)
+				{
+					println("Invalid conditional");
+				}
+				return result;
+			}
+			case ConditionalWithElse(BooleanExpression expr, list[Statement] statementsIfTrue, list[Statement] statementsIfFalse): 
+			{
+				bool result = validateStatements(statementsIfTrue, labelsOfStates) || validateStatements(statementsIfFalse, labelsOfStates);
+				if(!result)
+				{
+					println("Invalid conditional with else");
+				}
+				return result;
+			}
+			default: return true;
+		}
+}
+
+list[str] getAllStateLabels(list[State] states)
+{
+	list[str] labels = [];	
+	for(State state <- states)
+	{
+		if(State(str label, list[Statement] statements, bool isBeginState, bool isEndingState) := state)
+		{
+			labels += label;
+		}
+	}
+	return labels;
 }
 
 // Validates the labels of booleans, integer and states
