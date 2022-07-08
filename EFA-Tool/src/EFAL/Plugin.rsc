@@ -60,13 +60,7 @@ void compile(loc file, loc dir)
 	list[tuple[str fileName, str content]] javaFiles = compileAutomaton(automaton);
 	for(tuple[str fileName, str content] generatedFile <- javaFiles)
 	{
-		createFileWithContent(dir + "/<generatedFile.fileName>.java", generatedFile.content);
+		writeFile(dir + "/<generatedFile.fileName>.java", generatedFile.content);
 	}
 	println("Successfully compiled");
 }
-
-void createFileWithContent(loc file, str content)
-{
-	writeFile(file, content);
-}
-
