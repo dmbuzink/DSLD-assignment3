@@ -28,9 +28,7 @@ bool isValidAutomaton(Automaton automaton)
 		}
 		
 		for(State state <- states)
-		{
-			//bool isValid = false;
-			
+		{			
 			if(State(str label, list[Statement] statements, bool isBeginState, bool isEndingState) := state)
 			{
 				// Keep track of number of begin and end states
@@ -105,47 +103,7 @@ bool transitionForEachSymbol(list[Statement] statements, str symbol)
 	return false;
 }
 
-// TODO: Remove
-// Ensure that mentioned boolean/integer variables is pre-defined and not double defined
-//bool validateBooleanVariables(list[Statement] statements, list[Integer] integers, list[Boolean] booleans)
-//{
-//	// Create list with all pre-defined integers, also checking for double definitions.
-//	list[str] integerVarLabels = [];
-//	for(Integer integer <- integers)
-//	{
-//		if(Integer(str label, int val) := integer)
-//		{
-//			if(label in integerVarLabels)
-//			{
-//				return false;
-//			}
-//			
-//			integerVarLabels.push(label);
-//		}
-//	}
-//	
-//	// Create list with all pre-defined booleans, also checking for double definitions.
-//	list[str] booleanVarLabels = [];
-//	for(Boolean boolean <- booleans)
-//	{
-//		if(Boolean(str label, bool val) := boolean)
-//		{
-//			if(label in booleanVarLabels)
-//			{
-//				return false;
-//			}
-//			
-//			booleanVarLabels.push(label);
-//		}
-//	}
-//	
-//	list[str] labelIntersection = integerVarLabels & booleanVarLabels;
-//	//if(labelIntersection)
-//}
-
-// Get labels of states, integers and booleans
-// Returns an empty list if invalid
-//list[list[str]] 
+// Validate labels
 bool labelsAreValid(list[IntegerExpression] integers, list[BooleanExpression] booleans, list[State] states)
 {
 	// Create list with all pre-defined integers, also checking for double definitions.
@@ -174,7 +132,6 @@ bool labelsAreValid(list[IntegerExpression] integers, list[BooleanExpression] bo
 			if(label in booleanVarLabels || label == "PROCESSING_CHAR")
 			{
 				println("Boolean label: <label> defined more than once");
-				//return [];
 				return false;
 			}
 			
@@ -190,7 +147,6 @@ bool labelsAreValid(list[IntegerExpression] integers, list[BooleanExpression] bo
 			if(label in stateLabels || label == "PROCESSING_CHAR")
 			{
 				println("State <label> defined more than once");
-				//return [];
 				return false;
 			}
 			
@@ -202,12 +158,9 @@ bool labelsAreValid(list[IntegerExpression] integers, list[BooleanExpression] bo
 	if(size(integerVarLabels & booleanVarLabels) > 0)
 	{
 		println("A label gets used for both a boolean and an integer");
-		//return [];
 		return false;
 	}
 	
-	
-	//return [integerVarLabels, booleanVarLabels, stateLabels];
 	return true;
 }
 
@@ -270,65 +223,3 @@ list[str] getAllStateLabels(list[State] states)
 	}
 	return labels;
 }
-
-// Validates the labels of booleans, integer and states
-//bool validateLabels(list[Statement] statements, list[str] integerLabels, list[str] booleanLabels, list[str] stateLabels)
-//{
-//	for(Statement statement <- statements)
-//	{
-//		switch(statement)
-//		{
-//			case Transition(list[str] chars, State state):
-//			{
-//				if()
-//			}
-//						
-//			case Conditional(Expression expr, list[Statement] statementsIfTrue):
-//			{
-//				if(!validateLabels(statementsIfTrue, integerLabels, booleanLabels, stateLabels))
-//				{
-//					return false;
-//				}
-//			}
-//			
-//			case ConditionalWithElse(Expression expr, list[Statement] statementsIfTrue, list[Statement] statementsIfFalse):
-//			{
-//				if(!validateLabels(statementsIfTrue, integerLabels, booleanLabels, stateLabels) || 
-//					!validateLabels(statementsIfFalse, integerLabels, booleanLabels, stateLabels))
-//				{
-//					return false;
-//				}
-//			}
-//			
-//			case IntegerAssignment(Integer integer, IntegerExpression intExpr):
-//			{
-//				if(Integer(str label, int val) := boolean)
-//				{
-//					if(!(label in integerLabels))
-//					{
-//						return false;
-//					}
-//				}
-//			}
-//					
-//			case BooleanAssignment(Boolean boolean, BooleanExpression boolExpr):
-//			{
-//				if(Boolean(str label, bool val) := boolean)
-//				{
-//					if(!(label in booleanLabels))
-//					{
-//						return false;
-//					}
-//				}
-//			}
-//					
-//			default: ;
-//		}
-//	}
-//	
-//	return true;
-//}
-
-
-
-

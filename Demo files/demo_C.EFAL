@@ -1,0 +1,50 @@
+NFA
+
+ALPHABET := a,d,e,s,p,M,P,0,2,_
+
+BOOL encountered_s_previously := FALSE
+
+INITIAL STATE start_state:
+	TAKES 2 TO s2
+	
+STATE s2:
+	TAKES I TO s3
+
+STATE s3:
+	TAKES M TO s4
+
+STATE s4:
+	TAKES P TO s5
+
+STATE s5:
+	TAKES 2 TO s6
+
+STATE s6:
+	TAKES 0 TO s7	
+
+STATE s7:
+	TAKES _ TO s8
+
+STATE s8:
+	TAKES p TO s9
+
+STATE s9:
+	TAKES a TO s10
+
+STATE s10:
+	IF PROCESSING_CHAR = s:
+		IF NOT encountered_s_previously:
+			encountered_s_previously := TRUE
+			TAKES s TO s10
+		ELSE:
+			TAKES s TO s11
+		FI
+	FI
+
+STATE s11:
+	TAKES e TO s12
+
+STATE s12:
+	TAKES d TO final_state
+
+FINAL STATE final_state:

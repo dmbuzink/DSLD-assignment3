@@ -1,0 +1,22 @@
+DFA
+
+ALPHABET := a,b
+
+INITIAL FINAL STATE both_even:
+	TAKES a TO a_uneven_b_even
+	TAKES b TO a_even_b_uneven
+
+STATE both_uneven:
+	TAKES a TO a_even_b_uneven
+	TAKES b TO a_uneven_b_even
+
+STATE a_uneven_b_even:
+	TAKES a TO both_even
+	TAKES b TO both_uneven
+
+STATE a_even_b_uneven:
+	TAKES a TO both_uneven
+	TAKES b TO both_even
+	
+	
+	

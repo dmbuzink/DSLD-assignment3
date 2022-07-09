@@ -5,18 +5,7 @@ import Boolean;
 import ListRelation;
 import List;
 
-
-
-// Multiple approaches?
-// Compiler for SMT: https://github.com/usethesource/rascal/blob/main/src/org/rascalmpl/library/lang/smtlib2/Compiler.rsc
-// Factory for JSON reader and writer: https://github.com/usethesource/rascal/blob/main/src/org/rascalmpl/library/lang/json/Factory.java
-
-// Trying this approach: https://usethesource.io/dsl-in-36-lines-of-code
-// String templates:
-// https://tutor.rascal-mpl.org/Recipes/Common/StringTemplate/StringTemplate.html
-// https://tutor.rascal-mpl.org/Rascal/Expressions/Values/String/String.html
-  
-// Maybe return a list of strs? One for each file.
+// Compile automaton
 list[tuple[str fileName, str content]] compileAutomaton(Automaton a)
 {
 	list[tuple[str fileName, str content]] javaFiles = [getMainClass(), compileAutomatonSelf(a), getStateInterface(), getFailState()];
