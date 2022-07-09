@@ -21,6 +21,7 @@ syntax AutomataType
 	| "ENFA"
 	;
 
+//ALPHABET
 syntax Alphabet
 	= "ALPHABET" ":=" CharList;
 	
@@ -29,6 +30,22 @@ syntax CharList
 	| Char "," CharList
 	;
 
+//Declarations
+syntax DeclarationList
+	= Declaration
+	| Declaration DeclarationList
+	;
+
+syntax Declaration
+	= "TRANS" Label ":=" Transition
+	| "INT" Label ":=" IntegerLiteral
+	| "BOOL" Label ":=" Boolean
+	;
+
+syntax Transition
+	= "TAKES" CharList "TO" Label;
+
+//States
 syntax StateList
 	= State
 	| State StateList
@@ -41,6 +58,11 @@ syntax State
 	| "FINAL" "INITIAL" "STATE" Label StateContentListOrEmpty
 	| "STATE" Label StateContentListOrEmpty
 	;	
+
+syntax StateContentListOrEmpty
+	= ":" StateContentList
+	| ":"
+	;
 	
 syntax StateContentList
 	= StateContent StateContentList
@@ -53,49 +75,51 @@ syntax StateContent
 	| IFELSE
 	;
 	
-syntax StateContentListOrEmpty
-	= ":" StateContentList
-	| ":"
+syntax TransitionLabel
+	= "TRANS" Label
+	| Transition
 	;
-
-syntax DeclarationList
-	= Declaration
-	| Declaration DeclarationList
-	;
-
-syntax Declaration
-	= "TRANS" Label ":=" Transition
-	| "INT" Label ":=" IntegerLiteral
-	| "BOOL" Label ":=" Boolean
-	;
-
+	
+//EXAMPLE: TRANS trans
+	
+//IF ELSE, both require FI
 syntax IFELSE
 	= "IF" BoolExpr ":" StateContentList "ELSE" ":" StateContentList "FI"
 	| "IF" BoolExpr ":" StateContentList "FI"
 	;
+	
+//STATE x
+//IF TRUE:
+//	TAKE a TO y
+//  TAKE b TO z
+//  FI
 
+//Variable assignments
 syntax VariableAssignment
 	= Label ":=" BoolExpr
 	| Label ":=" IntExpr
 	;
-	
-//Does not properly support calculation rules
+
+//Integer expressions, with priorities
 syntax IntExpr
 	= IntegerLiteral
+	| "(" IntExpr ")"
 	| Label
-	| IntExpr "*" IntExpr
-	> IntExpr "/" IntExpr
-	> IntExpr "+" IntExpr
-	> IntExpr "-" IntExpr
+	> left IntExpr "*" IntExpr
+	> left IntExpr "/" IntExpr
+	> left IntExpr "+" IntExpr
+	> left IntExpr "-" IntExpr
 	;
 	
+//Boolean expressions with priorities
 syntax BoolExpr
 	= Boolean
 	| Label
-	| "NOT" BoolExpr
-	> BoolExpr "AND" BoolExpr
-	> BoolExpr "OR" BoolExpr
-	> BoolExpr "=" BoolExpr
+	| "(" BoolExpr ")"
+	> "NOT" BoolExpr
+	> left BoolExpr "AND" BoolExpr
+	> left BoolExpr "OR" BoolExpr
+	> left BoolExpr "=" BoolExpr
 	> IntExpr "=" IntExpr
 	> IntExpr '\>' IntExpr
 	> IntExpr '\<' IntExpr
@@ -103,11 +127,3 @@ syntax BoolExpr
 	| IntExpr '\>'"=" IntExpr
 	| "PROCESSING_CHAR" "=" Char
 	;
-	
-syntax TransitionLabel
-	= "TRANS" Label
-	| Transition
-	;
-	
-syntax Transition
-	= "TAKES" CharList "TO" Label;
