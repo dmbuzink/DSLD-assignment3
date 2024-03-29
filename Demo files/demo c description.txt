@@ -1,0 +1,1 @@
+Accepts the string: 2IMP20_passed
